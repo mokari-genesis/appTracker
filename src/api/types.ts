@@ -37,15 +37,18 @@ export interface AuctionHeader {
 export interface AuctionDetail {
   id: string
   auctionId: string
-  type: string
+  productId: string | null
   weight: number
   bagNumber: string | null
   numberOfPieces: number | null
-  winner1: string | null
-  winner2: string | null
+  winner1ClientId: string | null
+  winner2ClientId: string | null
   lot: string
   date: string
   highestBidRmb: number | null
   pricePerKg: number | null
   priceSold: number | null
+  productName?: string | null
+  winner1Name?: string | null
+  winner2Name?: string | null
 }

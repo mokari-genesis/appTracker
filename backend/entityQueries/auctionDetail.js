@@ -6,22 +6,28 @@ const getAuctionDetails = fetchResultMySQL(({ page, limit, id, auctionId }, conn
     SELECT 
       ad.id,
       ad.auction_id,
-      ad.type,
+      ad.product_id,
       ad.weight,
       ad.bag_number,
       ad.number_of_pieces,
-      ad.winner1,
-      ad.winner2,
+      ad.winner1_client_id,
+      ad.winner2_client_id,
       ad.lot,
       ad.date,
       ad.highest_bid_rmb,
       ad.price_per_kg,
       ad.price_sold,
       ad.created_at,
-      ah.name as auction_name
+      ah.name as auction_name,
+      p.name as product_name,
+      c1.name as winner1_name,
+      c2.name as winner2_name
     FROM 
       auction_details ad
       LEFT JOIN auction_headers ah ON ad.auction_id = ah.id
+      LEFT JOIN products p ON ad.product_id = p.id
+      LEFT JOIN clients c1 ON ad.winner1_client_id = c1.id
+      LEFT JOIN clients c2 ON ad.winner2_client_id = c2.id
     WHERE 
       ad.is_deleted = false
       AND (ad.id = ? OR ? IS NULL)
@@ -39,12 +45,12 @@ const insertAuctionDetail = fetchResultMySQL((params, connection) =>
     `
       INSERT INTO auction_details (
         auction_id,
-        type,
+        product_id,
         weight,
         bag_number,
         number_of_pieces,
-        winner1,
-        winner2,
+        winner1_client_id,
+        winner2_client_id,
         lot,
         date,
         highest_bid_rmb,
@@ -57,12 +63,12 @@ const insertAuctionDetail = fetchResultMySQL((params, connection) =>
     `,
     [
       params.auctionId,
-      params.type,
+      params.productId || null,
       params.weight,
       params.bagNumber,
       params.numberOfPieces,
-      params.winner1,
-      params.winner2,
+      params.winner1ClientId || null,
+      params.winner2ClientId || null,
       params.lot,
       params.date,
       params.highestBidRmb,
@@ -78,12 +84,12 @@ const updateAuctionDetail = fetchResultMySQL((params, connection) =>
       UPDATE auction_details
       SET 
         auction_id = ?,
-        type = ?,
+        product_id = ?,
         weight = ?,
         bag_number = ?,
         number_of_pieces = ?,
-        winner1 = ?,
-        winner2 = ?,
+        winner1_client_id = ?,
+        winner2_client_id = ?,
         lot = ?,
         date = ?,
         highest_bid_rmb = ?,
@@ -95,12 +101,12 @@ const updateAuctionDetail = fetchResultMySQL((params, connection) =>
     `,
     [
       params.auctionId,
-      params.type,
+      params.productId || null,
       params.weight,
       params.bagNumber,
       params.numberOfPieces,
-      params.winner1,
-      params.winner2,
+      params.winner1ClientId || null,
+      params.winner2ClientId || null,
       params.lot,
       params.date,
       params.highestBidRmb,

@@ -20,6 +20,8 @@ import {
   useDeleteAuctionDetail,
 } from '@/hooks/useAuctions'
 import { AuctionHeader, AuctionDetail } from '@/api/types'
+import { ProductAutocomplete } from './ProductAutocomplete'
+import { ClientAutocomplete } from './ClientAutocomplete'
 
 const AuctionsPage: React.FC = () => {
   const [selectedAuctionId, setSelectedAuctionId] = useState<string | null>(null)
@@ -65,11 +67,19 @@ const AuctionsPage: React.FC = () => {
   ]
 
   const detailColumns: Column<AuctionDetail>[] = [
-    { key: 'type', label: 'Type' },
+    {
+      key: 'productName',
+      label: 'Product',
+      render: value => value || '-',
+    },
     { key: 'weight', label: 'Weight (kg)' },
     { key: 'bagNumber', label: 'Bag #' },
     { key: 'numberOfPieces', label: 'Pieces' },
-    { key: 'winner1', label: 'Winner 1' },
+    {
+      key: 'winner1Name',
+      label: 'Winner 1',
+      render: value => value || '-',
+    },
     { key: 'lot', label: 'Lot' },
     {
       key: 'highestBidRmb',
@@ -200,10 +210,10 @@ const AuctionsPage: React.FC = () => {
   }
 
   const handleSaveDetail = async () => {
-    if (!detailFormData.type || !detailFormData.weight) {
+    if (!detailFormData.productId || !detailFormData.weight) {
       toast({
         title: 'Validation Error',
-        description: 'Type and weight are required fields.',
+        description: 'Product and weight are required fields.',
         variant: 'destructive',
       })
       return
@@ -211,12 +221,12 @@ const AuctionsPage: React.FC = () => {
 
     const detail = {
       auctionId: detailFormData.auctionId || selectedAuctionId || '',
-      type: detailFormData.type || '',
+      productId: detailFormData.productId || null,
       weight: detailFormData.weight || 0,
       bagNumber: detailFormData.bagNumber || '',
       numberOfPieces: detailFormData.numberOfPieces || 0,
-      winner1: detailFormData.winner1 || '',
-      winner2: detailFormData.winner2 || '',
+      winner1ClientId: detailFormData.winner1ClientId || null,
+      winner2ClientId: detailFormData.winner2ClientId || null,
       lot: detailFormData.lot || '',
       date: detailFormData.date || new Date().toISOString().split('T')[0],
       highestBidRmb: detailFormData.highestBidRmb || null,
@@ -483,18 +493,13 @@ const AuctionsPage: React.FC = () => {
 
           <div className='grid gap-6 py-6 max-h-[60vh] overflow-y-auto'>
             <div className='grid grid-cols-2 gap-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='detail-type' className='text-base font-medium'>
-                  Type *
-                </Label>
-                <Input
-                  id='detail-type'
-                  value={detailFormData.type || ''}
-                  onChange={e => setDetailFormData({ ...detailFormData, type: e.target.value })}
-                  placeholder='e.g., Green Tea, Ceramics'
-                  className='h-12 text-base'
-                />
-              </div>
+              <ProductAutocomplete
+                value={detailFormData.productId || null}
+                onChange={productId => setDetailFormData({ ...detailFormData, productId })}
+                label='Product'
+                placeholder='Search product...'
+                required
+              />
               <div className='space-y-2'>
                 <Label htmlFor='detail-weight' className='text-base font-medium'>
                   Weight (kg) *
@@ -562,30 +567,18 @@ const AuctionsPage: React.FC = () => {
             </div>
 
             <div className='grid grid-cols-2 gap-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='winner1' className='text-base font-medium'>
-                  Winner 1
-                </Label>
-                <Input
-                  id='winner1'
-                  value={detailFormData.winner1 || ''}
-                  onChange={e => setDetailFormData({ ...detailFormData, winner1: e.target.value })}
-                  placeholder='Winner name'
-                  className='h-12 text-base'
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='winner2' className='text-base font-medium'>
-                  Winner 2 (Optional)
-                </Label>
-                <Input
-                  id='winner2'
-                  value={detailFormData.winner2 || ''}
-                  onChange={e => setDetailFormData({ ...detailFormData, winner2: e.target.value })}
-                  placeholder='Winner name'
-                  className='h-12 text-base'
-                />
-              </div>
+              <ClientAutocomplete
+                value={detailFormData.winner1ClientId || null}
+                onChange={clientId => setDetailFormData({ ...detailFormData, winner1ClientId: clientId })}
+                label='Winner 1'
+                placeholder='Search winner...'
+              />
+              <ClientAutocomplete
+                value={detailFormData.winner2ClientId || null}
+                onChange={clientId => setDetailFormData({ ...detailFormData, winner2ClientId: clientId })}
+                label='Winner 2 (Optional)'
+                placeholder='Search winner...'
+              />
             </div>
 
             <div className='space-y-2'>
