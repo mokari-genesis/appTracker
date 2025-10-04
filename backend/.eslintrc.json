@@ -1,0 +1,21 @@
+{
+  "env": {
+    "node": true,
+    "commonjs": true,
+    "es2021": true
+  },
+  "extends": ["eslint:recommended", "plugin:prettier/recommended"],
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "rules": {
+    "no-unused-vars": ["error", { "varsIgnorePattern": "_" }],
+    "no-inner-declarations": "off",
+    "indent": "off",
+    "linebreak-style": ["error", "unix"],
+    "quotes": ["error", "single", { "allowTemplateLiterals": true }],
+    "semi": ["error", "never"],
+    "curly": ["error", "all"]
+  }
+}
+  
