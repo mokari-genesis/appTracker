@@ -95,6 +95,11 @@ const AuctionsPage: React.FC = () => {
       label: 'Winner 1',
       render: value => value || '-',
     },
+    {
+      key: 'winner2Name',
+      label: 'Winner 2',
+      render: value => value || '-',
+    },
     { key: 'lot', label: 'Lot' },
     {
       key: 'highestBidRmb',
