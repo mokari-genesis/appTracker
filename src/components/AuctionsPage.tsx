@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { DataTable, Column } from './DataTable'
+import { DataTable, Column, CustomAction } from './DataTable'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
-import { Calendar, DollarSign, Users } from 'lucide-react'
+import { Calendar, DollarSign, Users, CheckCircle, XCircle } from 'lucide-react'
 import {
   useAuctionHeaders,
   useCreateAuctionHeader,
@@ -19,6 +19,7 @@ import {
   useCreateAuctionDetail,
   useUpdateAuctionDetail,
   useDeleteAuctionDetail,
+  useToggleAuctionDetailSold,
 } from '@/hooks/useAuctions'
 import { AuctionHeader, AuctionDetail } from '@/api/types'
 import { ProductAutocomplete } from './ProductAutocomplete'
@@ -49,6 +50,7 @@ const AuctionsPage: React.FC = () => {
   const createDetailMutation = useCreateAuctionDetail()
   const updateDetailMutation = useUpdateAuctionDetail()
   const deleteDetailMutation = useDeleteAuctionDetail()
+  const toggleSoldMutation = useToggleAuctionDetailSold()
 
   const auctions = headersData?.auctionHeaders || []
   const auctionDetails = detailsData?.auctionDetails || []
@@ -326,8 +328,49 @@ const AuctionsPage: React.FC = () => {
     }
   }
 
+  const handleToggleSold = async (detail: AuctionDetail) => {
+    const auction = auctions.find(a => a.id === selectedAuctionId)
+    if (auction?.isClosed) {
+      toast({
+        title: 'Auction is closed',
+        description: 'Cannot modify details of a closed auction.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    try {
+      await toggleSoldMutation.mutateAsync({
+        id: detail.id,
+        isSold: !detail.isSold,
+      })
+      toast({
+        title: detail.isSold ? 'Marked as not sold' : 'Marked as sold',
+        description: `Auction detail has been successfully updated.`,
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update auction detail.',
+        variant: 'destructive',
+      })
+    }
+  }
+
   const selectedAuction = selectedAuctionId ? auctions.find(a => Number(a.id) === Number(selectedAuctionId)) : null
   const filteredDetails = selectedAuctionId ? auctionDetails : []
+
+  const getDetailCustomActions = (detail: AuctionDetail): CustomAction<AuctionDetail>[] => [
+    {
+      label: detail.isSold ? 'Mark Unsold' : 'Mark Sold',
+      icon: detail.isSold ? <XCircle className='h-3 w-3 mr-1' /> : <CheckCircle className='h-3 w-3 mr-1' />,
+      onClick: handleToggleSold,
+      variant: 'outline',
+      className: detail.isSold
+        ? 'h-8 px-3 bg-white border-orange-300 text-orange-700 hover:bg-orange-50 hover:text-orange-800 transition-colors'
+        : 'h-8 px-3 bg-white border-green-300 text-green-700 hover:bg-green-50 hover:text-green-800 transition-colors',
+    },
+  ]
 
   return (
     <div className='space-y-6'>
@@ -490,6 +533,7 @@ const AuctionsPage: React.FC = () => {
                     ? () => toast({ title: 'Auction is closed', variant: 'destructive' })
                     : handleDeleteDetail
                 }
+                customActions={selectedAuction?.isClosed ? undefined : getDetailCustomActions}
                 searchPlaceholder='Search auction details...'
               />
             )}

@@ -99,9 +99,24 @@ const deleteAuctionDetail = async ({ request }) => {
   return auctionDetailRepo.deleteAuctionDetail(value)
 }
 
+const toggleAuctionDetailSoldSchema = joi.object({
+  id: joi.number().integer().required(),
+  isSold: joi.boolean().required(),
+})
+const toggleAuctionDetailSold = async ({ request }) => {
+  const { error, value } = toggleAuctionDetailSoldSchema.validate(request.body)
+
+  if (error) {
+    throw new Error(`Invalid Parameters: ${error.message}`)
+  }
+
+  return auctionDetailRepo.toggleAuctionDetailSold(value)
+}
+
 module.exports = {
   getAuctionDetails,
   addAuctionDetail,
   updateAuctionDetail,
   deleteAuctionDetail,
+  toggleAuctionDetailSold,
 }

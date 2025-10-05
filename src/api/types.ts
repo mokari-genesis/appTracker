@@ -50,6 +50,7 @@ export interface AuctionDetail {
   highestBidRmb: number | null
   pricePerKg: number | null
   priceSold: number | null
+  isSold: boolean
   productName?: string | null
   winner1Name?: string | null
   winner2Name?: string | null
