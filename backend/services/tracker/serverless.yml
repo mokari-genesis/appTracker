@@ -17,7 +17,7 @@ custom:
       other: 'dev' # anything else
     current: ${self:custom.stages.secrets.${opt:stage}, self:custom.stages.secrets.other}
 
-  apisecret: ${ssm:/aws/reference/secretsmanager/${self:custom.stages.current}-tracker}
+  apisecret: ${ssm:/aws/reference/secretsmanager/prod/appTracker}
 
 provider:
   name: aws
@@ -29,17 +29,17 @@ provider:
   stage: ${opt:stage}
   region: us-east-1
   deploymentBucket:
-    name: ${self:custom.apisecret.BUCKET}
+    name: ${self:custom.apisecret.bucket}
 
   environment:
     NODE_PATH: ${self:custom.${opt:stage}.environment.NODE_PATH, ''}
     STAGE: ${self:provider.stage}
     CURRENT_ENV: ${self:provider.stage}
-    DATABASE_HOST: ${self:custom.apisecret.DATABASE_HOST}
-    DATABASE_USER: ${self:custom.apisecret.DATABASE_USER}
-    DATABASE_NAME: ${self:custom.apisecret.DATABASE_NAME}
-    DATABASE_PASSWORD: ${self:custom.apisecret.DATABASE_PASSWORD}
-    DATABASE_PORT: ${self:custom.apisecret.DATABASE_PORT}
+    DATABASE_HOST: ${self:custom.apisecret.host}
+    DATABASE_USER: ${self:custom.apisecret.username}
+    DATABASE_NAME: ${self:custom.apisecret.dbInstanceIdentifier}
+    DATABASE_PASSWORD: ${self:custom.apisecret.password}
+    DATABASE_PORT: ${self:custom.apisecret.port}
 
   iamRoleStatements:
     - Effect: Allow
@@ -60,7 +60,6 @@ package:
 
 functions:
   proxy:
-    tracing: true
     timeout: 300
     memorySize: 2048
     handler: handler.app
@@ -79,4 +78,4 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
     layers:
-      - ${self:custom.apisecret.LAYERS, ''}
+      - ${self:custom.apisecret.layer, ''}
