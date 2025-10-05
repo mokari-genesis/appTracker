@@ -3,6 +3,7 @@ import {
   createAuctionHeader,
   deleteAuctionDetail,
   deleteAuctionHeader,
+  closeAuctionHeader,
   fetchAuctionDetails,
   fetchAuctionHeaders,
   GetAuctionDetailsParams,
@@ -35,6 +36,16 @@ export const useUpdateAuctionHeader = () => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: updateAuctionHeader,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.AuctionHeaders] })
+    },
+  })
+}
+
+export const useCloseAuctionHeader = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: closeAuctionHeader,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.AuctionHeaders] })
     },

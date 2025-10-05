@@ -31,6 +31,8 @@ export interface AuctionHeader {
   numberOfPeople: number | null
   date: string
   exchangeRate: number | null // Yuan to USD
+  isClosed: boolean
+  closedAt: string | null
   createdAt: string
 }
 

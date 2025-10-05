@@ -9,6 +9,8 @@ const getAuctionHeaders = fetchResultMySQL(({ page, limit, id }, connection) =>
       number_of_people,
       date,
       exchange_rate,
+      is_closed,
+      closed_at,
       created_at 
     FROM 
       auction_headers
@@ -62,6 +64,21 @@ const updateAuctionHeader = fetchResultMySQL(
     )
 )
 
+const closeAuctionHeader = fetchResultMySQL(({ id }, connection) =>
+  connection.query(
+    `
+      UPDATE auction_headers
+      SET 
+        is_closed = true,
+        closed_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE 
+        id = ?
+    `,
+    [id]
+  )
+)
+
 const deleteAuctionHeader = fetchResultMySQL(({ id }, connection) =>
   connection.query(
     `
@@ -80,5 +97,6 @@ module.exports = {
   getAuctionHeaders,
   insertAuctionHeader,
   updateAuctionHeader,
+  closeAuctionHeader,
   deleteAuctionHeader,
 }

@@ -68,6 +68,19 @@ const updateAuctionHeader = async ({ request }) => {
   return auctionHeaderRepo.updateAuctionHeader(value)
 }
 
+const closeAuctionHeaderSchema = joi.object({
+  id: joi.number().integer().required(),
+})
+const closeAuctionHeader = async ({ request }) => {
+  const { error, value } = closeAuctionHeaderSchema.validate(request.body)
+
+  if (error) {
+    throw new Error(`Invalid Parameters: ${error.message}`)
+  }
+
+  return auctionHeaderRepo.closeAuctionHeader(value)
+}
+
 const deleteAuctionHeaderSchema = joi.object({
   id: joi.number().integer().required(),
 })
@@ -85,5 +98,6 @@ module.exports = {
   getAuctionHeaders,
   addAuctionHeader,
   updateAuctionHeader,
+  closeAuctionHeader,
   deleteAuctionHeader,
 }

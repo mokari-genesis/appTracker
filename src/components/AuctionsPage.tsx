@@ -13,6 +13,7 @@ import {
   useAuctionHeaders,
   useCreateAuctionHeader,
   useUpdateAuctionHeader,
+  useCloseAuctionHeader,
   useDeleteAuctionHeader,
   useAuctionDetails,
   useCreateAuctionDetail,
@@ -41,6 +42,7 @@ const AuctionsPage: React.FC = () => {
   // Mutations for headers
   const createHeaderMutation = useCreateAuctionHeader()
   const updateHeaderMutation = useUpdateAuctionHeader()
+  const closeHeaderMutation = useCloseAuctionHeader()
   const deleteHeaderMutation = useDeleteAuctionHeader()
 
   // Mutations for details
@@ -63,6 +65,19 @@ const AuctionsPage: React.FC = () => {
       key: 'exchangeRate',
       label: 'Exchange Rate (¥→$)',
       render: value => Number(value).toFixed(3),
+    },
+    {
+      key: 'isClosed',
+      label: 'Status',
+      render: value => (
+        <span
+          className={`px-2 py-1 rounded text-xs font-medium ${
+            value ? 'bg-gray-200 text-gray-700' : 'bg-green-100 text-green-700'
+          }`}
+        >
+          {value ? 'Closed' : 'Open'}
+        </span>
+      ),
     },
   ]
 
@@ -177,12 +192,33 @@ const AuctionsPage: React.FC = () => {
       })
       return
     }
+
+    const auction = auctions.find(a => a.id === selectedAuctionId)
+    if (auction?.isClosed) {
+      toast({
+        title: 'Auction is closed',
+        description: 'Cannot add details to a closed auction.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setEditingDetail(null)
     setDetailFormData({ auctionId: selectedAuctionId })
     setIsDetailDialogOpen(true)
   }
 
   const handleEditDetail = (detail: AuctionDetail) => {
+    const auction = auctions.find(a => a.id === selectedAuctionId)
+    if (auction?.isClosed) {
+      toast({
+        title: 'Auction is closed',
+        description: 'Cannot edit details of a closed auction.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setEditingDetail(detail)
     setDetailFormData({
       ...detail,
@@ -192,6 +228,16 @@ const AuctionsPage: React.FC = () => {
   }
 
   const handleDeleteDetail = async (detail: AuctionDetail) => {
+    const auction = auctions.find(a => a.id === selectedAuctionId)
+    if (auction?.isClosed) {
+      toast({
+        title: 'Auction is closed',
+        description: 'Cannot delete details of a closed auction.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     if (window.confirm('Are you sure you want to delete this auction detail?')) {
       try {
         await deleteDetailMutation.mutateAsync(detail.id)
@@ -257,7 +303,25 @@ const AuctionsPage: React.FC = () => {
     }
   }
 
-  const selectedAuction = auctions.find(a => a.id === selectedAuctionId)
+  const handleCloseAuction = async (header: AuctionHeader) => {
+    if (window.confirm(`Are you sure you want to close "${header.name}"? This action cannot be undone.`)) {
+      try {
+        await closeHeaderMutation.mutateAsync(header.id)
+        toast({
+          title: 'Auction closed',
+          description: `${header.name} has been successfully closed.`,
+        })
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to close auction.',
+          variant: 'destructive',
+        })
+      }
+    }
+  }
+
+  const selectedAuction = selectedAuctionId ? auctions.find(a => Number(a.id) === Number(selectedAuctionId)) : null
   const filteredDetails = selectedAuctionId ? auctionDetails : []
 
   return (
@@ -353,24 +417,48 @@ const AuctionsPage: React.FC = () => {
             {selectedAuction && (
               <Card className='bg-blue-50 border-blue-200 shadow-sm'>
                 <CardContent className='p-6'>
-                  <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-                    <div>
-                      <p className='text-base text-blue-600 font-medium'>Auction Name</p>
-                      <p className='text-lg font-semibold text-blue-900'>{selectedAuction.name}</p>
+                  <div className='flex justify-between items-center'>
+                    <div className='grid grid-cols-2 md:grid-cols-4 gap-4 flex-1'>
+                      <div>
+                        <p className='text-base text-blue-600 font-medium'>Auction Name</p>
+                        <p className='text-lg font-semibold text-blue-900'>{selectedAuction.name}</p>
+                      </div>
+                      <div>
+                        <p className='text-base text-blue-600 font-medium'>Participants</p>
+                        <p className='text-lg font-semibold text-blue-900'>{selectedAuction.numberOfPeople}</p>
+                      </div>
+                      <div>
+                        <p className='text-base text-blue-600 font-medium'>Date</p>
+                        <p className='text-lg font-semibold text-blue-900'>
+                          {format(new Date(selectedAuction.date), 'MMM dd, yyyy')}
+                        </p>
+                      </div>
+                      <div>
+                        <p className='text-base text-blue-600 font-medium'>Exchange Rate</p>
+                        <p className='text-lg font-semibold text-blue-900'>¥1 = ${selectedAuction.exchangeRate}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className='text-base text-blue-600 font-medium'>Participants</p>
-                      <p className='text-lg font-semibold text-blue-900'>{selectedAuction.numberOfPeople}</p>
-                    </div>
-                    <div>
-                      <p className='text-base text-blue-600 font-medium'>Date</p>
-                      <p className='text-lg font-semibold text-blue-900'>
-                        {format(new Date(selectedAuction.date), 'MMM dd, yyyy')}
-                      </p>
-                    </div>
-                    <div>
-                      <p className='text-base text-blue-600 font-medium'>Exchange Rate</p>
-                      <p className='text-lg font-semibold text-blue-900'>¥1 = ${selectedAuction.exchangeRate}</p>
+                    <div className='ml-4'>
+                      {selectedAuction.isClosed ? (
+                        <div className='text-center'>
+                          <span className='inline-block px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium'>
+                            Closed
+                          </span>
+                          {selectedAuction.closedAt && (
+                            <p className='text-xs text-gray-600 mt-1'>
+                              {format(new Date(selectedAuction.closedAt), 'MMM dd, yyyy HH:mm')}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => handleCloseAuction(selectedAuction)}
+                          disabled={closeHeaderMutation.isPending}
+                          className='bg-orange-600 hover:bg-orange-700'
+                        >
+                          Close Auction
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -382,9 +470,21 @@ const AuctionsPage: React.FC = () => {
                 title={`Auction Details - ${selectedAuction?.name || 'Selected Auction'}`}
                 data={filteredDetails}
                 columns={detailColumns}
-                onAdd={handleAddDetail}
-                onEdit={handleEditDetail}
-                onDelete={handleDeleteDetail}
+                onAdd={
+                  selectedAuction?.isClosed
+                    ? () => toast({ title: 'Auction is closed', variant: 'destructive' })
+                    : handleAddDetail
+                }
+                onEdit={
+                  selectedAuction?.isClosed
+                    ? () => toast({ title: 'Auction is closed', variant: 'destructive' })
+                    : handleEditDetail
+                }
+                onDelete={
+                  selectedAuction?.isClosed
+                    ? () => toast({ title: 'Auction is closed', variant: 'destructive' })
+                    : handleDeleteDetail
+                }
                 searchPlaceholder='Search auction details...'
               />
             )}

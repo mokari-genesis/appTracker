@@ -31,7 +31,7 @@ const fetchAuctionHeaders = async (params: GetAuctionHeadersParams = {}): Promis
 }
 
 const createAuctionHeader = async (
-  auctionHeader: Omit<AuctionHeader, 'id' | 'createdAt'>
+  auctionHeader: Omit<AuctionHeader, 'id' | 'createdAt' | 'isClosed' | 'closedAt'>
 ): Promise<MutationResponse> => {
   const response = await fetch(`${API_BASE_URL}/auction-headers`, {
     method: 'POST',
@@ -48,7 +48,9 @@ const createAuctionHeader = async (
   return result.data
 }
 
-const updateAuctionHeader = async (auctionHeader: Omit<AuctionHeader, 'createdAt'>): Promise<MutationResponse> => {
+const updateAuctionHeader = async (
+  auctionHeader: Omit<AuctionHeader, 'createdAt' | 'isClosed' | 'closedAt'>
+): Promise<MutationResponse> => {
   const response = await fetch(`${API_BASE_URL}/auction-headers`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -57,6 +59,22 @@ const updateAuctionHeader = async (auctionHeader: Omit<AuctionHeader, 'createdAt
 
   if (!response.ok) {
     throw new Error('Failed to update auction header')
+  }
+
+  const result = await response.json()
+
+  return result.data
+}
+
+const closeAuctionHeader = async (id: string): Promise<MutationResponse> => {
+  const response = await fetch(`${API_BASE_URL}/auction-headers/close`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: parseInt(id) }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to close auction header')
   }
 
   const result = await response.json()
@@ -159,6 +177,7 @@ export {
   fetchAuctionHeaders,
   createAuctionHeader,
   updateAuctionHeader,
+  closeAuctionHeader,
   deleteAuctionHeader,
   fetchAuctionDetails,
   createAuctionDetail,

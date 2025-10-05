@@ -20,6 +20,12 @@ const auctionHeadersRoute = [
     public: false,
   },
   {
+    path: 'auction-headers/close',
+    method: 'PUT',
+    handler: auctionHeaders.closeAuctionHeader,
+    public: false,
+  },
+  {
     path: 'auction-headers',
     method: 'DELETE',
     handler: auctionHeaders.deleteAuctionHeader,
