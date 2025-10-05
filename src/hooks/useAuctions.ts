@@ -58,6 +58,7 @@ export const useDeleteAuctionHeader = () => {
     mutationFn: deleteAuctionHeader,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.AuctionHeaders] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.AuctionDetails] })
     },
   })
 }

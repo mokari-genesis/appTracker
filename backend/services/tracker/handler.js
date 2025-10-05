@@ -41,6 +41,7 @@ const app = async event => {
 */
     const user = {
       email: 'm@m.com',
+      authorised: true,
     }
     //isAuthorized is a function that checks if the user is authorized to access the api
     if (!route.public) {
@@ -49,7 +50,11 @@ const app = async event => {
 
       if (!isAuthorized) {
         Logger.unexpected('Unauthorized', { user })
-        return util.response(400, null, `User with email ${user.email} is not authorized.`)
+        return util.response(
+          400,
+          null,
+          `User with email ${user.email} is not authorized.`
+        )
       }
     }
 

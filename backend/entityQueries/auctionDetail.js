@@ -30,6 +30,7 @@ const getAuctionDetails = fetchResultMySQL(({ page, limit, id, auctionId }, conn
       LEFT JOIN clients c2 ON ad.winner2_client_id = c2.id
     WHERE 
       ad.is_deleted = false
+      AND ah.is_deleted = false
       AND (ad.id = ? OR ? IS NULL)
       AND (ad.auction_id = ? OR ? IS NULL)
     ORDER BY 

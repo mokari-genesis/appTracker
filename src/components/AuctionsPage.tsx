@@ -111,7 +111,7 @@ const AuctionsPage: React.FC = () => {
   // Header CRUD operations
   const handleAddHeader = () => {
     setEditingHeader(null)
-    setHeaderFormData({})
+    setHeaderFormData({ date: new Date().toISOString().split('T')[0] })
     setIsHeaderDialogOpen(true)
   }
 
