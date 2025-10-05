@@ -1,0 +1,27 @@
+# Config Files
+.DS_Store
+.vs_code
+.idea
+_notes
+.env
+
+# Build Files
+node_modules
+**/node_modules
+**/.serverless
+*.zip
+_scratch
+.history
+.vscode
+
+serverless-api\.iml
+services/linkedData/package-lock.json
+*.rdb
+*.p12
+*.pem
+
+# Don't mix npm & yarn: ignore all yarn.lock files
+**/yarn.lock
+
+# Doc files
+**/documentation
