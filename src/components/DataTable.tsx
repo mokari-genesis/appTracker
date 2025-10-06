@@ -18,6 +18,14 @@ export interface Column<T> {
   render?: (value: any, item: T) => React.ReactNode;
 }
 
+export interface CustomAction<T> {
+  label: string;
+  icon?: React.ReactNode;
+  onClick: (item: T) => void;
+  variant?: 'default' | 'outline' | 'destructive';
+  className?: string;
+}
+
 interface DataTableProps<T> {
   title: string;
   data: T[];
@@ -26,6 +34,7 @@ interface DataTableProps<T> {
   onEdit: (item: T) => void;
   onDelete: (item: T) => void;
   searchPlaceholder?: string;
+  customActions?: (item: T) => CustomAction<T>[];
 }
 
 export function DataTable<T extends { readonly id: string }>({
@@ -36,6 +45,7 @@ export function DataTable<T extends { readonly id: string }>({
   onEdit,
   onDelete,
   searchPlaceholder = "Search...",
+  customActions,
 }: DataTableProps<T>) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -121,6 +131,18 @@ export function DataTable<T extends { readonly id: string }>({
                     ))}
                     <TableCell className="text-right h-12">
                       <div className="flex gap-2 justify-end">
+                        {customActions && customActions(item).map((action, index) => (
+                          <Button
+                            key={index}
+                            variant={action.variant || "outline"}
+                            size="sm"
+                            onClick={() => action.onClick(item)}
+                            className={action.className || "h-8 px-3"}
+                          >
+                            {action.icon}
+                            {action.label}
+                          </Button>
+                        ))}
                         <Button
                           variant="outline"
                           size="sm"

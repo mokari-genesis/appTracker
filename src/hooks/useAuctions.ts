@@ -10,6 +10,7 @@ import {
   GetAuctionHeadersParams,
   updateAuctionDetail,
   updateAuctionHeader,
+  toggleAuctionDetailSold,
 } from '@/api/auctions'
 import { QueryKeys } from '@/lib/queryKeys'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -95,6 +96,16 @@ export const useDeleteAuctionDetail = () => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: deleteAuctionDetail,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.AuctionDetails] })
+    },
+  })
+}
+
+export const useToggleAuctionDetailSold = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, isSold }: { id: string; isSold: boolean }) => toggleAuctionDetailSold(id, isSold),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.AuctionDetails] })
     },

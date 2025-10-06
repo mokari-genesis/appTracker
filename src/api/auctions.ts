@@ -125,7 +125,7 @@ const fetchAuctionDetails = async (params: GetAuctionDetailsParams = {}): Promis
   return result.data || []
 }
 
-const createAuctionDetail = async (auctionDetail: Omit<AuctionDetail, 'id'>): Promise<MutationResponse> => {
+const createAuctionDetail = async (auctionDetail: Omit<AuctionDetail, 'id' | 'isSold'>): Promise<MutationResponse> => {
   const response = await fetch(`${API_BASE_URL}/auction-details`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -141,7 +141,7 @@ const createAuctionDetail = async (auctionDetail: Omit<AuctionDetail, 'id'>): Pr
   return result.data
 }
 
-const updateAuctionDetail = async (auctionDetail: AuctionDetail): Promise<MutationResponse> => {
+const updateAuctionDetail = async (auctionDetail: Omit<AuctionDetail, 'isSold'>): Promise<MutationResponse> => {
   const response = await fetch(`${API_BASE_URL}/auction-details`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -173,6 +173,22 @@ const deleteAuctionDetail = async (id: string): Promise<MutationResponse> => {
   return result.data
 }
 
+const toggleAuctionDetailSold = async (id: string, isSold: boolean): Promise<MutationResponse> => {
+  const response = await fetch(`${API_BASE_URL}/auction-details/toggle-sold`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: parseInt(id), isSold }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to toggle auction detail sold status')
+  }
+
+  const result = await response.json()
+
+  return result.data
+}
+
 export {
   fetchAuctionHeaders,
   createAuctionHeader,
@@ -183,4 +199,5 @@ export {
   createAuctionDetail,
   updateAuctionDetail,
   deleteAuctionDetail,
+  toggleAuctionDetailSold,
 }

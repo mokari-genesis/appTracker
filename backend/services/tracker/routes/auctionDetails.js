@@ -25,6 +25,12 @@ const auctionDetailsRoute = [
     handler: auctionDetails.deleteAuctionDetail,
     public: false,
   },
+  {
+    path: 'auction-details/toggle-sold',
+    method: 'PUT',
+    handler: auctionDetails.toggleAuctionDetailSold,
+    public: false,
+  },
 ]
 
 module.exports = auctionDetailsRoute

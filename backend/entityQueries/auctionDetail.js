@@ -17,6 +17,7 @@ const getAuctionDetails = fetchResultMySQL(({ page, limit, id, auctionId }, conn
       ad.highest_bid_rmb,
       ad.price_per_kg,
       ad.price_sold,
+      ad.is_sold,
       ad.created_at,
       ah.name as auction_name,
       p.name as product_name,
@@ -132,9 +133,24 @@ const deleteAuctionDetail = fetchResultMySQL(({ id }, connection) =>
   )
 )
 
+const toggleAuctionDetailSold = fetchResultMySQL(({ id, isSold }, connection) =>
+  connection.query(
+    `
+      UPDATE auction_details
+      SET 
+        is_sold = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE 
+        id = ?
+    `,
+    [isSold, id]
+  )
+)
+
 module.exports = {
   getAuctionDetails,
   insertAuctionDetail,
   updateAuctionDetail,
   deleteAuctionDetail,
+  toggleAuctionDetailSold,
 }
