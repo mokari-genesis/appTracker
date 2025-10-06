@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DataTable, Column, CustomAction } from './DataTable'
+import { AuctionSummary } from './AuctionSummary'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
 import { Calendar, DollarSign, Users, CheckCircle, XCircle } from 'lucide-react'
@@ -513,30 +514,25 @@ const AuctionsPage: React.FC = () => {
               </Card>
             )}
 
-            {selectedAuctionId && (
-              <DataTable
-                title={`Auction Details - ${selectedAuction?.name || 'Selected Auction'}`}
-                data={filteredDetails}
-                columns={detailColumns}
-                onAdd={
-                  selectedAuction?.isClosed
-                    ? () => toast({ title: 'Auction is closed', variant: 'destructive' })
-                    : handleAddDetail
-                }
-                onEdit={
-                  selectedAuction?.isClosed
-                    ? () => toast({ title: 'Auction is closed', variant: 'destructive' })
-                    : handleEditDetail
-                }
-                onDelete={
-                  selectedAuction?.isClosed
-                    ? () => toast({ title: 'Auction is closed', variant: 'destructive' })
-                    : handleDeleteDetail
-                }
-                customActions={selectedAuction?.isClosed ? undefined : getDetailCustomActions}
-                searchPlaceholder='Search auction details...'
-              />
-            )}
+            {selectedAuctionId &&
+              (selectedAuction?.isClosed ? (
+                <AuctionSummary
+                  details={filteredDetails}
+                  auctionName={selectedAuction.name}
+                  exchangeRate={selectedAuction.exchangeRate || 0}
+                />
+              ) : (
+                <DataTable
+                  title={`Auction Details - ${selectedAuction?.name || 'Selected Auction'}`}
+                  data={filteredDetails}
+                  columns={detailColumns}
+                  onAdd={handleAddDetail}
+                  onEdit={handleEditDetail}
+                  onDelete={handleDeleteDetail}
+                  customActions={getDetailCustomActions}
+                  searchPlaceholder='Search auction details...'
+                />
+              ))}
           </div>
         </TabsContent>
       </Tabs>
