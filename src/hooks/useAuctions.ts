@@ -4,8 +4,10 @@ import {
   deleteAuctionDetail,
   deleteAuctionHeader,
   closeAuctionHeader,
+  reopenAuctionHeader,
   fetchAuctionDetails,
   fetchAuctionHeaders,
+  fetchNextAuctionHeaderId,
   GetAuctionDetailsParams,
   GetAuctionHeadersParams,
   updateAuctionDetail,
@@ -20,6 +22,13 @@ export const useAuctionHeaders = (params: GetAuctionHeadersParams = {}) => {
   return useQuery({
     queryKey: [QueryKeys.AuctionHeaders, params],
     queryFn: () => fetchAuctionHeaders(params),
+  })
+}
+
+export const useNextAuctionHeaderId = () => {
+  return useQuery({
+    queryKey: [QueryKeys.AuctionHeaders, 'next-id'],
+    queryFn: fetchNextAuctionHeaderId,
   })
 }
 
@@ -47,6 +56,16 @@ export const useCloseAuctionHeader = () => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: closeAuctionHeader,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.AuctionHeaders] })
+    },
+  })
+}
+
+export const useReopenAuctionHeader = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: reopenAuctionHeader,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.AuctionHeaders] })
     },

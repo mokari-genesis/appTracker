@@ -30,6 +30,18 @@ const fetchAuctionHeaders = async (params: GetAuctionHeadersParams = {}): Promis
   return result.data || []
 }
 
+const fetchNextAuctionHeaderId = async (): Promise<number> => {
+  const response = await fetch(`${API_BASE_URL}/auction-headers/next-id`)
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch next auction header ID')
+  }
+
+  const result = await response.json()
+
+  return result.data?.nextId || 1
+}
+
 const createAuctionHeader = async (
   auctionHeader: Omit<AuctionHeader, 'id' | 'createdAt' | 'isClosed' | 'closedAt'>
 ): Promise<MutationResponse> => {
@@ -75,6 +87,22 @@ const closeAuctionHeader = async (id: string): Promise<MutationResponse> => {
 
   if (!response.ok) {
     throw new Error('Failed to close auction header')
+  }
+
+  const result = await response.json()
+
+  return result.data
+}
+
+const reopenAuctionHeader = async (id: string): Promise<MutationResponse> => {
+  const response = await fetch(`${API_BASE_URL}/auction-headers/reopen`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: parseInt(id) }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to reopen auction header')
   }
 
   const result = await response.json()
@@ -191,9 +219,11 @@ const toggleAuctionDetailSold = async (id: string, isSold: boolean): Promise<Mut
 
 export {
   fetchAuctionHeaders,
+  fetchNextAuctionHeaderId,
   createAuctionHeader,
   updateAuctionHeader,
   closeAuctionHeader,
+  reopenAuctionHeader,
   deleteAuctionHeader,
   fetchAuctionDetails,
   createAuctionDetail,

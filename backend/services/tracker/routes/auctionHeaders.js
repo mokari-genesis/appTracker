@@ -8,6 +8,12 @@ const auctionHeadersRoute = [
     public: false,
   },
   {
+    path: 'auction-headers/next-id',
+    method: 'GET',
+    handler: auctionHeaders.getNextAuctionHeaderId,
+    public: false,
+  },
+  {
     path: 'auction-headers',
     method: 'POST',
     handler: auctionHeaders.addAuctionHeader,
@@ -23,6 +29,12 @@ const auctionHeadersRoute = [
     path: 'auction-headers/close',
     method: 'PUT',
     handler: auctionHeaders.closeAuctionHeader,
+    public: false,
+  },
+  {
+    path: 'auction-headers/reopen',
+    method: 'PUT',
+    handler: auctionHeaders.reopenAuctionHeader,
     public: false,
   },
   {

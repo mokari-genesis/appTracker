@@ -35,6 +35,13 @@ const getAuctionHeaders = async ({ request }) => {
   }
 }
 
+const getNextAuctionHeaderId = async () => {
+  const result = await auctionHeaderRepo.getNextAuctionHeaderId({})
+  return {
+    nextId: result[0]?.nextId || 1,
+  }
+}
+
 const addAuctionHeaderSchema = joi.object({
   name: joi.string().min(1).max(200).required(),
   numberOfPeople: joi.number().integer().min(0).allow(null),
@@ -81,6 +88,19 @@ const closeAuctionHeader = async ({ request }) => {
   return auctionHeaderRepo.closeAuctionHeader(value)
 }
 
+const reopenAuctionHeaderSchema = joi.object({
+  id: joi.number().integer().required(),
+})
+const reopenAuctionHeader = async ({ request }) => {
+  const { error, value } = reopenAuctionHeaderSchema.validate(request.body)
+
+  if (error) {
+    throw new Error(`Invalid Parameters: ${error.message}`)
+  }
+
+  return auctionHeaderRepo.reopenAuctionHeader(value)
+}
+
 const deleteAuctionHeaderSchema = joi.object({
   id: joi.number().integer().required(),
 })
@@ -96,8 +116,10 @@ const deleteAuctionHeader = async ({ request }) => {
 
 module.exports = {
   getAuctionHeaders,
+  getNextAuctionHeaderId,
   addAuctionHeader,
   updateAuctionHeader,
   closeAuctionHeader,
+  reopenAuctionHeader,
   deleteAuctionHeader,
 }
