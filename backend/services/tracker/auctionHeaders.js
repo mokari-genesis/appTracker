@@ -35,6 +35,13 @@ const getAuctionHeaders = async ({ request }) => {
   }
 }
 
+const getNextAuctionHeaderId = async () => {
+  const result = await auctionHeaderRepo.getNextAuctionHeaderId({})
+  return {
+    nextId: result[0]?.nextId || 1,
+  }
+}
+
 const addAuctionHeaderSchema = joi.object({
   name: joi.string().min(1).max(200).required(),
   numberOfPeople: joi.number().integer().min(0).allow(null),
@@ -109,6 +116,7 @@ const deleteAuctionHeader = async ({ request }) => {
 
 module.exports = {
   getAuctionHeaders,
+  getNextAuctionHeaderId,
   addAuctionHeader,
   updateAuctionHeader,
   closeAuctionHeader,

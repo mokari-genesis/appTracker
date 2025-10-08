@@ -30,6 +30,18 @@ const fetchAuctionHeaders = async (params: GetAuctionHeadersParams = {}): Promis
   return result.data || []
 }
 
+const fetchNextAuctionHeaderId = async (): Promise<number> => {
+  const response = await fetch(`${API_BASE_URL}/auction-headers/next-id`)
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch next auction header ID')
+  }
+
+  const result = await response.json()
+
+  return result.data?.nextId || 1
+}
+
 const createAuctionHeader = async (
   auctionHeader: Omit<AuctionHeader, 'id' | 'createdAt' | 'isClosed' | 'closedAt'>
 ): Promise<MutationResponse> => {
@@ -207,6 +219,7 @@ const toggleAuctionDetailSold = async (id: string, isSold: boolean): Promise<Mut
 
 export {
   fetchAuctionHeaders,
+  fetchNextAuctionHeaderId,
   createAuctionHeader,
   updateAuctionHeader,
   closeAuctionHeader,

@@ -143,7 +143,7 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, auction
                         </tr>
                       ))}
                       {/* Totales por producto */}
-                      <tr className='bg-blue-50 font-semibold'>
+                      <tr className='bg-green-50 font-semibold'>
                         <td colSpan={2} className='px-4 py-3 text-sm text-gray-900'>
                           Product Total
                         </td>
@@ -161,12 +161,22 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, auction
                         </td>
                         <td></td>
                       </tr>
-                      <tr className='bg-blue-100 font-semibold'>
+                      <tr className='bg-emerald-100 font-semibold'>
                         <td colSpan={7} className='px-4 py-3 text-sm text-gray-900'>
                           Average Price per KG (Total Price Sold / Total Weight)
                         </td>
                         <td className='px-4 py-3 text-sm text-gray-900 text-right'>
                           ${group.avgPricePerKg.toFixed(2)}/kg
+                        </td>
+                        <td className='px-4 py-3 text-sm text-gray-900 text-right'></td>
+                        <td></td>
+                      </tr>
+                      <tr className='bg-green-100 font-semibold'>
+                        <td colSpan={7} className='px-4 py-3 text-sm text-gray-900'>
+                          Total Items
+                        </td>
+                        <td className='px-4 py-3 text-sm text-gray-900 text-right'>
+                          {group.details.length} {group.details.length === 1 ? 'item' : 'items'}
                         </td>
                         <td className='px-4 py-3 text-sm text-gray-900 text-right'></td>
                         <td></td>

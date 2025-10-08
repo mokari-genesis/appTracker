@@ -10,6 +10,7 @@ import { format } from 'date-fns'
 import { Calendar, DollarSign, Users } from 'lucide-react'
 import {
   useAuctionHeaders,
+  useNextAuctionHeaderId,
   useCreateAuctionHeader,
   useUpdateAuctionHeader,
   useDeleteAuctionHeader,
@@ -31,6 +32,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
   // Fetch data
   const { data: headersData } = useAuctionHeaders()
   const { data: detailsData } = useAuctionDetails({})
+  const { data: nextId } = useNextAuctionHeaderId()
 
   // Mutations for headers
   const createHeaderMutation = useCreateAuctionHeader()
@@ -72,7 +74,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
   const handleAddHeader = () => {
     setEditingHeader(null)
     const today = new Date().toISOString().split('T')[0]
-    const defaultName = `Predeterminado - ${format(new Date(), 'MMM dd, yyyy')}`
+    const defaultName = `Predeterminado - ${nextId || format(new Date(), 'hh:mm a')}`
     setHeaderFormData({ date: today, name: defaultName })
     setIsHeaderDialogOpen(true)
   }

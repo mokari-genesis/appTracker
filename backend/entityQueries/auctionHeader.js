@@ -25,6 +25,18 @@ const getAuctionHeaders = fetchResultMySQL(({ page, limit, id }, connection) =>
   )
 )
 
+const getNextAuctionHeaderId = fetchResultMySQL((params, connection) =>
+  connection.query(
+    `
+    SELECT 
+      COALESCE(MAX(id), 0) + 1 as nextId
+    FROM 
+      auction_headers
+  `,
+    []
+  )
+)
+
 const insertAuctionHeader = fetchResultMySQL(
   ({ name, numberOfPeople, date, exchangeRate }, connection) =>
     connection.query(
@@ -110,6 +122,7 @@ const deleteAuctionHeader = fetchResultMySQL(({ id }, connection) =>
 
 module.exports = {
   getAuctionHeaders,
+  getNextAuctionHeaderId,
   insertAuctionHeader,
   updateAuctionHeader,
   closeAuctionHeader,
