@@ -17,7 +17,7 @@ interface ProductGroup {
   avgPricePerKg: number
 }
 
-export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, auctionName, exchangeRate }) => {
+export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, auctionName }) => {
   const productGroups = details.reduce((acc, detail) => {
     const productName = detail.productName || 'Unknown Product'
 
@@ -178,7 +178,7 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, auction
             ))}
 
             {/* Totales Generales */}
-            <Card className='bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200'>
+            {/* <Card className='bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200'>
               <CardHeader>
                 <CardTitle className='text-xl font-bold text-gray-900'>Grand Totals</CardTitle>
               </CardHeader>
@@ -202,7 +202,6 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, auction
                   </div>
                 </div>
 
-                {/* Información adicional */}
                 <div className='mt-6 pt-6 border-t border-green-200'>
                   <div className='grid grid-cols-2 md:grid-cols-3 gap-4 text-sm'>
                     <div>
@@ -220,7 +219,7 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, auction
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </CardContent>
       </Card>

@@ -79,6 +79,21 @@ const closeAuctionHeader = fetchResultMySQL(({ id }, connection) =>
   )
 )
 
+const reopenAuctionHeader = fetchResultMySQL(({ id }, connection) =>
+  connection.query(
+    `
+      UPDATE auction_headers
+      SET 
+        is_closed = false,
+        closed_at = NULL,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE 
+        id = ?
+    `,
+    [id]
+  )
+)
+
 const deleteAuctionHeader = fetchResultMySQL(({ id }, connection) =>
   connection.query(
     `
@@ -98,5 +113,6 @@ module.exports = {
   insertAuctionHeader,
   updateAuctionHeader,
   closeAuctionHeader,
+  reopenAuctionHeader,
   deleteAuctionHeader,
 }

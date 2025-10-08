@@ -82,6 +82,22 @@ const closeAuctionHeader = async (id: string): Promise<MutationResponse> => {
   return result.data
 }
 
+const reopenAuctionHeader = async (id: string): Promise<MutationResponse> => {
+  const response = await fetch(`${API_BASE_URL}/auction-headers/reopen`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: parseInt(id) }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to reopen auction header')
+  }
+
+  const result = await response.json()
+
+  return result.data
+}
+
 const deleteAuctionHeader = async (id: string): Promise<MutationResponse> => {
   const response = await fetch(`${API_BASE_URL}/auction-headers`, {
     method: 'DELETE',
@@ -194,6 +210,7 @@ export {
   createAuctionHeader,
   updateAuctionHeader,
   closeAuctionHeader,
+  reopenAuctionHeader,
   deleteAuctionHeader,
   fetchAuctionDetails,
   createAuctionDetail,

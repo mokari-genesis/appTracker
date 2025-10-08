@@ -26,6 +26,12 @@ const auctionHeadersRoute = [
     public: false,
   },
   {
+    path: 'auction-headers/reopen',
+    method: 'PUT',
+    handler: auctionHeaders.reopenAuctionHeader,
+    public: false,
+  },
+  {
     path: 'auction-headers',
     method: 'DELETE',
     handler: auctionHeaders.deleteAuctionHeader,
