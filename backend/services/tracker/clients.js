@@ -35,7 +35,7 @@ const getClients = async ({ request }) => {
 
 const addClientSchema = joi.object({
   name: joi.string().min(1).max(200).required(),
-  email: joi.string().email().required(),
+  email: joi.string().email().optional().allow(null, ''),
   phone: joi.string().max(50).optional().allow(null, ''),
   company: joi.string().max(200).optional().allow(null, ''),
   address: joi.string().max(500).optional().allow(null, ''),
