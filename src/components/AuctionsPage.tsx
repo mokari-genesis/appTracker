@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DataTable, Column, CustomAction } from './DataTable'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
 import { Calendar, DollarSign, Users } from 'lucide-react'
 import {
   useAuctionHeaders,
-  useNextAuctionHeaderId,
   useCreateAuctionHeader,
   useUpdateAuctionHeader,
   useDeleteAuctionHeader,
@@ -32,7 +32,6 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
   // Fetch data
   const { data: headersData } = useAuctionHeaders()
   const { data: detailsData } = useAuctionDetails({})
-  const { data: nextId } = useNextAuctionHeaderId()
 
   // Mutations for headers
   const createHeaderMutation = useCreateAuctionHeader()
@@ -74,8 +73,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
   const handleAddHeader = () => {
     setEditingHeader(null)
     const today = new Date().toISOString().split('T')[0]
-    const defaultName = `Predeterminado - ${nextId || format(new Date(), 'hh:mm a')}`
-    setHeaderFormData({ date: today, name: defaultName })
+    setHeaderFormData({ date: today })
     setIsHeaderDialogOpen(true)
   }
 
@@ -230,13 +228,19 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
               <Label htmlFor='auction-name' className='text-base font-medium'>
                 Auction Name *
               </Label>
-              <Input
-                id='auction-name'
-                value={headerFormData.name || ''}
-                onChange={e => setHeaderFormData({ ...headerFormData, name: e.target.value })}
-                placeholder='Enter auction name'
-                className='h-12 text-base'
-              />
+              <Select
+                value={headerFormData.name}
+                onValueChange={value => setHeaderFormData({ ...headerFormData, name: value })}
+              >
+                <SelectTrigger id='auction-name' className='h-12 text-base'>
+                  <SelectValue placeholder='Select auction name' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='Pinguino'>Pinguino</SelectItem>
+                  <SelectItem value='Antonio'>Antonio</SelectItem>
+                  <SelectItem value='Juan'>Juan</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className='grid grid-cols-2 gap-4'>

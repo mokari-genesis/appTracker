@@ -92,6 +92,7 @@ export const ProductAutocomplete: React.FC<ProductAutocompleteProps> = ({
           onFocus={() => setShowDropdown(true)}
           placeholder={placeholder}
           className='h-12 text-base pr-8'
+          autoComplete='off'
         />
         {searchTerm && (
           <button

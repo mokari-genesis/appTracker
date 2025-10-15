@@ -93,6 +93,7 @@ export const ClientAutocomplete: React.FC<ClientAutocompleteProps> = ({
           onFocus={() => setShowDropdown(true)}
           placeholder={placeholder}
           className='h-12 text-base pr-8'
+          autoComplete='off'
         />
         {searchTerm && (
           <button

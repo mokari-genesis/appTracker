@@ -35,7 +35,7 @@ const getAuctionDetails = fetchResultMySQL(({ page, limit, id, auctionId }, conn
       AND (ad.id = ? OR ? IS NULL)
       AND (ad.auction_id = ? OR ? IS NULL)
     ORDER BY 
-      ad.date DESC, ad.created_at DESC
+      ad.created_at ASC
     ${limit ? `LIMIT ? OFFSET ?` : ''}
   `,
     [id, id, auctionId, auctionId, limit, page]
