@@ -370,7 +370,12 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
               <div className='bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-blue-100'>
                 <p className='text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1'>Date</p>
                 <p className='text-xl font-bold text-blue-900'>
-                  {format(new Date(selectedAuction.date), 'MMM dd, yyyy')}
+                  {(() => {
+                    const dateStr = selectedAuction.date.split('T')[0]
+                    const [year, month, day] = dateStr.split('-')
+                    const date = new Date(Number(year), Number(month) - 1, Number(day))
+                    return format(date, 'MMM dd, yyyy')
+                  })()}
                 </p>
               </div>
               <div className='bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-blue-100'>

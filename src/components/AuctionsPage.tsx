@@ -48,7 +48,14 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
     {
       key: 'date',
       label: 'Date',
-      render: value => format(new Date(value), 'MMM dd, yyyy'),
+      render: value => {
+        if (!value) return '--'
+        const dateStr = value.split('T')[0] // Get YYYY-MM-DD
+        const [year, month, day] = dateStr.split('-')
+        // Create date in local timezone
+        const date = new Date(Number(year), Number(month) - 1, Number(day))
+        return format(date, 'MMM dd, yyyy')
+      },
     },
     {
       key: 'exchangeRate',
