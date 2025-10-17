@@ -1,6 +1,9 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { AuctionDetail } from '@/api/types'
+import { formatMoney, formatYuan } from '@/lib/number'
+import { Info } from 'lucide-react'
 
 interface AuctionSummaryProps {
   details: AuctionDetail[]
@@ -17,7 +20,7 @@ interface ProductGroup {
   avgPricePerKg: number
 }
 
-export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, auctionName }) => {
+export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details }) => {
   const productGroups = details.reduce((acc, detail) => {
     const productName = detail.productName || 'Unknown Product'
 
@@ -33,9 +36,13 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, auction
     }
 
     acc[productName].details.push(detail)
-    acc[productName].totalWeight += Number(detail.weight) || 0
-    acc[productName].totalHighestBid += Number(detail.highestBidRmb) || 0
-    acc[productName].totalPriceSold += Number(detail.priceSold) || 0
+    
+    // Only include sold items in totals
+    if (detail.isSold) {
+      acc[productName].totalWeight += Number(detail.weight) || 0
+      acc[productName].totalHighestBid += Number(detail.highestBidRmb) || 0
+      acc[productName].totalPriceSold += Number(detail.priceSold) || 0
+    }
 
     return acc
   }, {} as Record<string, ProductGroup>)
@@ -62,18 +69,62 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, auction
   }
 
   return (
-    <div className='space-y-6'>
-      <Card className='shadow-sm'>
-        <CardHeader>
-          <CardTitle className='text-2xl font-bold text-gray-900'>Auction Summary - {auctionName}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className='space-y-8'>
+    <TooltipProvider>
+      <div className='space-y-6'>
+        <Card className='shadow-sm'>
+          <CardHeader>
+            <CardTitle className='text-2xl font-bold text-gray-900'>Auction Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className='space-y-8'>
+              {/* Grand Totals */}
+              <div className='bg-gradient-to-br from-green-200 via-green-200 to-teal-200 rounded-xl p-6 border border-emerald-200'>
+                <div className='flex items-center justify-between mb-4'>
+                  <h3 className='text-lg font-bold text-gray-900'>📊 Grand Totals</h3>
+                  <p className='text-xs font-semibold text-gray-700 bg-white/60 px-3 py-1 rounded-full'>Only sold items included</p>
+                </div>
+                <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
+                  <div className='bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 shadow-sm border border-green-100'>
+                    <p className='text-xs font-bold text-gray-600 uppercase tracking-wide'>Total in USD</p>
+                    <p className='text-xl font-bold text-green-700 mt-1'>{formatMoney(grandTotals.totalPriceSold, 0)}</p>
+                  </div>
+                  <div className='bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 shadow-sm border border-blue-100'>
+                    <p className='text-xs font-bold text-gray-600 uppercase tracking-wide'>Total in RMB</p>
+                    <p className='text-xl font-bold text-blue-700 mt-1'>{formatYuan(grandTotals.totalHighestBid, 0)}</p>
+                  </div>
+                  <div className='bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 shadow-sm border border-indigo-100'>
+                    <div className='flex items-center gap-1'>
+                      <p className='text-xs font-bold text-gray-600 uppercase tracking-wide'>
+                        {grandTotals.totalWeight.toFixed(2)} kg
+                      </p>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className='h-3.5 w-3.5 text-gray-500 cursor-help' />
+                        </TooltipTrigger>
+                        <TooltipContent className='max-w-xs'>
+                          <p className='font-semibold mb-1'>Average Price per KG</p>
+                          <p>Total USD ÷ Total Weight</p>
+                          <p className='text-xs mt-1 opacity-90'>
+                            {formatMoney(grandTotals.totalPriceSold, 0)} ÷ {grandTotals.totalWeight.toFixed(2)} kg
+                          </p>
+                          <p className='text-xs mt-2 pt-2 border-t border-gray-300 italic'>
+                            * Only sold items included in totals
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <p className='text-xl font-bold text-indigo-700 mt-1'>
+                      {formatMoney(grandTotals.avgPricePerKg, 0)}/kg
+                    </p>
+                  </div>
+                </div>
+              </div>
+
             {/* Resumen por producto */}
             {productGroupsArray.map((group, index) => (
               <div key={index} className='border rounded-lg overflow-hidden'>
                 <div className='bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 border-b'>
-                  <h3 className='text-lg font-semibold text-gray-900'>{group.productName}</h3>
+                  <h3 className='text-lg font-semibold text-gray-900'>Grade: {group.productName}</h3>
                 </div>
 
                 {/* Tabla de detalles del producto */}
@@ -82,22 +133,22 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, auction
                     <thead className='bg-gray-50'>
                       <tr>
                         <th className='px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider'>
-                          Bag #
-                        </th>
-                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider'>
-                          Lot
-                        </th>
-                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider'>
                           Weight (kg)
                         </th>
                         <th className='px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider'>
-                          Pieces
+                          Bag #
+                        </th>
+                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider'>
+                          # of Pieces
                         </th>
                         <th className='px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider'>
                           Winner 1
                         </th>
                         <th className='px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider'>
                           Winner 2
+                        </th>
+                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider'>
+                          Lot
                         </th>
                         <th className='px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider'>
                           Highest Bid (¥)
@@ -116,20 +167,20 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, auction
                     <tbody className='bg-white divide-y divide-gray-200'>
                       {group.details.map((detail, detailIndex) => (
                         <tr key={detailIndex} className='hover:bg-gray-50'>
-                          <td className='px-4 py-3 text-sm text-gray-900'>{detail.bagNumber || '-'}</td>
-                          <td className='px-4 py-3 text-sm text-gray-900'>{detail.lot || '-'}</td>
                           <td className='px-4 py-3 text-sm text-gray-900'>{Number(detail.weight).toFixed(2)}</td>
+                          <td className='px-4 py-3 text-sm text-gray-900'>{detail.bagNumber || '-'}</td>
                           <td className='px-4 py-3 text-sm text-gray-900'>{detail.numberOfPieces || '-'}</td>
                           <td className='px-4 py-3 text-sm text-gray-900'>{detail.winner1Name || '-'}</td>
                           <td className='px-4 py-3 text-sm text-gray-900'>{detail.winner2Name || '-'}</td>
+                          <td className='px-4 py-3 text-sm text-gray-900'>{detail.lot || '-'}</td>
                           <td className='px-4 py-3 text-sm text-gray-900 text-right'>
-                            ¥{Number(detail.highestBidRmb || 0).toLocaleString()}
+                            {formatYuan(Number(detail.highestBidRmb || 0))}
                           </td>
                           <td className='px-4 py-3 text-sm text-gray-900 text-right'>
-                            ${Number(detail.pricePerKg || 0).toFixed(2)}
+                            {formatMoney(Number(detail.pricePerKg || 0))}
                           </td>
                           <td className='px-4 py-3 text-sm text-gray-900 text-right font-medium'>
-                            ${Number(detail.priceSold || 0).toFixed(2)}
+                            {formatMoney(Number(detail.priceSold || 0))}
                           </td>
                           <td className='px-4 py-3 text-sm text-center'>
                             <span
@@ -142,97 +193,56 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, auction
                           </td>
                         </tr>
                       ))}
-                      {/* Totales por producto */}
-                      <tr className='bg-green-50 font-semibold'>
-                        <td colSpan={2} className='px-4 py-3 text-sm text-gray-900'>
-                          Product Total
-                        </td>
-                        <td className='px-4 py-3 text-sm text-gray-900'>{group.totalWeight.toFixed(2)} kg</td>
-                        <td className='px-4 py-3 text-sm text-gray-900'>
-                          {group.details.reduce((sum, d) => sum + (Number(d.numberOfPieces) || 0), 0)}
-                        </td>
-                        <td colSpan={2}></td>
-                        <td className='px-4 py-3 text-sm text-gray-900 text-right'>
-                          ¥{group.totalHighestBid.toLocaleString()}
-                        </td>
-                        <td className='px-4 py-3 text-sm text-gray-900 text-right'>-</td>
-                        <td className='px-4 py-3 text-sm text-gray-900 text-right'>
-                          ${group.totalPriceSold.toFixed(2)}
-                        </td>
-                        <td></td>
-                      </tr>
-                      <tr className='bg-emerald-100 font-semibold'>
-                        <td colSpan={7} className='px-4 py-3 text-sm text-gray-900'>
-                          Average Price per KG (Total Price Sold / Total Weight)
-                        </td>
-                        <td className='px-4 py-3 text-sm text-gray-900 text-right'>
-                          ${group.avgPricePerKg.toFixed(2)}/kg
-                        </td>
-                        <td className='px-4 py-3 text-sm text-gray-900 text-right'></td>
-                        <td></td>
-                      </tr>
-                      <tr className='bg-green-100 font-semibold'>
-                        <td colSpan={7} className='px-4 py-3 text-sm text-gray-900'>
-                          Total Items
-                        </td>
-                        <td className='px-4 py-3 text-sm text-gray-900 text-right'>
-                          {group.details.length} {group.details.length === 1 ? 'item' : 'items'}
-                        </td>
-                        <td className='px-4 py-3 text-sm text-gray-900 text-right'></td>
-                        <td></td>
-                      </tr>
                     </tbody>
                   </table>
                 </div>
+
+                {/* Product Totals Summary */}
+                <div className='bg-gradient-to-r from-slate-50 to-gray-50 px-4 py-4 border-t-2 border-gray-200'>
+                  <p className='text-xs font-semibold text-gray-600 mb-3 flex items-center gap-1'>
+                    <span className='inline-block w-2 h-2 bg-green-500 rounded-full'></span>
+                    Product Totals (Only sold items)
+                  </p>
+                  <div className='grid grid-cols-3 gap-4'>
+                    <div className='bg-white rounded-lg px-4 py-3 shadow-sm border border-green-100'>
+                      <p className='text-xs font-bold text-gray-600 uppercase tracking-wide'>Total in USD</p>
+                      <p className='text-lg font-bold text-green-700 mt-1'>{formatMoney(group.totalPriceSold, 0)}</p>
+                    </div>
+                    <div className='bg-white rounded-lg px-4 py-3 shadow-sm border border-blue-100'>
+                      <p className='text-xs font-bold text-gray-600 uppercase tracking-wide'>Total in RMB</p>
+                      <p className='text-lg font-bold text-blue-700 mt-1'>{formatYuan(group.totalHighestBid, 0)}</p>
+                    </div>
+                    <div className='bg-white rounded-lg px-4 py-3 shadow-sm border border-indigo-100'>
+                      <div className='flex items-center gap-1'>
+                        <p className='text-xs font-bold text-gray-600 uppercase tracking-wide'>
+                          {group.totalWeight.toFixed(2)} kg
+                        </p>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className='h-3.5 w-3.5 text-gray-500 cursor-help' />
+                          </TooltipTrigger>
+                          <TooltipContent className='max-w-xs'>
+                            <p className='font-semibold mb-1'>Average Price per KG</p>
+                            <p>Total USD ÷ Total Weight</p>
+                            <p className='text-xs mt-1 opacity-90'>
+                              {formatMoney(group.totalPriceSold, 0)} ÷ {group.totalWeight.toFixed(2)} kg
+                            </p>
+                            <p className='text-xs mt-2 pt-2 border-t border-gray-300 italic'>
+                              * Only sold items included in totals
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <p className='text-lg font-bold text-indigo-700 mt-1'>{formatMoney(group.avgPricePerKg, 0)}/kg</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
-
-            {/* Totales Generales */}
-            {/* <Card className='bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200'>
-              <CardHeader>
-                <CardTitle className='text-xl font-bold text-gray-900'>Grand Totals</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='grid grid-cols-2 md:grid-cols-4 gap-6'>
-                  <div>
-                    <p className='text-sm text-gray-600 font-medium'>Total Weight</p>
-                    <p className='text-2xl font-bold text-gray-900'>{grandTotals.totalWeight.toFixed(2)} kg</p>
-                  </div>
-                  <div>
-                    <p className='text-sm text-gray-600 font-medium'>Total Highest Bid</p>
-                    <p className='text-2xl font-bold text-gray-900'>¥{grandTotals.totalHighestBid.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className='text-sm text-gray-600 font-medium'>Total Price Sold</p>
-                    <p className='text-2xl font-bold text-green-700'>${grandTotals.totalPriceSold.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <p className='text-sm text-gray-600 font-medium'>Average Price per KG</p>
-                    <p className='text-2xl font-bold text-blue-700'>${grandTotals.avgPricePerKg.toFixed(2)}/kg</p>
-                  </div>
-                </div>
-
-                <div className='mt-6 pt-6 border-t border-green-200'>
-                  <div className='grid grid-cols-2 md:grid-cols-3 gap-4 text-sm'>
-                    <div>
-                      <p className='text-gray-600'>Total Products</p>
-                      <p className='text-lg font-semibold text-gray-900'>{productGroupsArray.length}</p>
-                    </div>
-                    <div>
-                      <p className='text-gray-600'>Total Items</p>
-                      <p className='text-lg font-semibold text-gray-900'>{details.length}</p>
-                    </div>
-                    <div>
-                      <p className='text-gray-600'>Exchange Rate</p>
-                      <p className='text-lg font-semibold text-gray-900'>¥1 = ${exchangeRate}</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card> */}
           </div>
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   )
 }

@@ -86,10 +86,10 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
   const calculatePrices = () => {
     const highestBid = detailFormData.highestBidRmb || 0
     const weight = detailFormData.weight || 0
-    const exchangeRate = selectedAuction?.exchangeRate || 0.14
+    const exchangeRate = selectedAuction?.exchangeRate || 7.14
 
-    const priceSold = highestBid * exchangeRate
-    const pricePerKg = weight > 0 ? priceSold / weight : 0
+    const priceSold = highestBid / exchangeRate
+    const pricePerKg = weight > 0 ? highestBid / weight / exchangeRate : 0
 
     return { priceSold, pricePerKg }
   }
@@ -308,73 +308,75 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
   return (
     <div className='space-y-6'>
       <div className='flex items-center justify-between'>
-        <div>
-          <div className='flex items-center gap-4'>
-            {onBack && (
-              <Button onClick={onBack} variant='outline' size='sm' className='h-10 rounded-full'>
-                <ArrowLeft className='h-4 w-4' />
-              </Button>
-            )}
-            <div>
-              <h1 className='text-4xl font-bold text-gray-900'>Auction Details</h1>
-              <p className='text-lg text-gray-600 mt-2'>{selectedAuction.name}</p>
-            </div>
+        <div className='flex items-center gap-4'>
+          {onBack && (
+            <Button onClick={onBack} variant='outline' size='sm' className='h-10 rounded-full'>
+              <ArrowLeft className='h-4 w-4' />
+            </Button>
+          )}
+          <div>
+            <h1 className='text-4xl font-bold text-gray-900'>Auction Details</h1>
           </div>
+        </div>
+
+        {/* Close/Reopen Auction Button */}
+        <div className='flex items-center'>
+          {selectedAuction.isClosed ? (
+            <div className='flex items-center gap-3 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl px-5 py-3 shadow-sm border border-gray-300'>
+              <div className='flex flex-col items-center'>
+                <span className='inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-gradient-to-r from-gray-200 to-gray-300 text-gray-700 font-bold text-sm shadow-sm'>
+                  🔒 Closed
+                </span>
+                {selectedAuction.closedAt && (
+                  <p className='text-xs text-gray-600 mt-1.5 font-medium'>
+                    {format(new Date(selectedAuction.closedAt), 'MMM dd, yyyy HH:mm')}
+                  </p>
+                )}
+              </div>
+              <div className='h-12 w-px bg-gray-300'></div>
+              <Button
+                onClick={handleReopenAuction}
+                disabled={reopenHeaderMutation.isPending}
+                variant='outline'
+                className='font-semibold hover:bg-blue-50 hover:border-blue-400 border-2 h-10'
+              >
+                Reopen
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={handleCloseAuction}
+              disabled={closeHeaderMutation.isPending}
+              className='bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold shadow-lg px-6 py-5 text-base border-2 border-orange-400'
+            >
+              Close Auction
+            </Button>
+          )}
         </div>
       </div>
 
-      <Card className='bg-blue-50 border-blue-200 shadow-sm'>
+      <Card className='bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-200'>
         <CardContent className='p-6'>
-          <div className='flex justify-between items-center'>
+          <div className='flex justify-between items-stretch gap-6'>
             <div className='grid grid-cols-2 md:grid-cols-4 gap-4 flex-1'>
-              <div>
-                <p className='text-base text-blue-600 font-medium'>Auction Name</p>
-                <p className='text-lg font-semibold text-blue-900'>{selectedAuction.name}</p>
+              <div className='bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-blue-100'>
+                <p className='text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1'>Auction Name</p>
+                <p className='text-xl font-bold text-blue-900'>{selectedAuction.name}</p>
               </div>
-              <div>
-                <p className='text-base text-blue-600 font-medium'>Participants</p>
-                <p className='text-lg font-semibold text-blue-900'>{selectedAuction.numberOfPeople}</p>
+              <div className='bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-blue-100'>
+                <p className='text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1'>Participants</p>
+                <p className='text-xl font-bold text-blue-900'>{selectedAuction.numberOfPeople}</p>
               </div>
-              <div>
-                <p className='text-base text-blue-600 font-medium'>Date</p>
-                <p className='text-lg font-semibold text-blue-900'>
+              <div className='bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-blue-100'>
+                <p className='text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1'>Date</p>
+                <p className='text-xl font-bold text-blue-900'>
                   {format(new Date(selectedAuction.date), 'MMM dd, yyyy')}
                 </p>
               </div>
-              <div>
-                <p className='text-base text-blue-600 font-medium'>Exchange Rate</p>
-                <p className='text-lg font-semibold text-blue-900'>¥1 = ${selectedAuction.exchangeRate}</p>
+              <div className='bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-blue-100'>
+                <p className='text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1'>Exchange Rate</p>
+                <p className='text-xl font-bold text-blue-900'>$1 = ¥{selectedAuction.exchangeRate}</p>
               </div>
-            </div>
-            <div className='ml-4'>
-              {selectedAuction.isClosed ? (
-                <div className='text-center'>
-                  <span className='inline-block px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium'>
-                    Closed
-                  </span>
-                  {selectedAuction.closedAt && (
-                    <p className='text-xs text-gray-600 mt-1'>
-                      {format(new Date(selectedAuction.closedAt), 'MMM dd, yyyy HH:mm')}
-                    </p>
-                  )}
-                  <Button
-                    onClick={handleReopenAuction}
-                    disabled={reopenHeaderMutation.isPending}
-                    variant='outline'
-                    className='mt-2 w-full'
-                  >
-                    Reopen Auction
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  onClick={handleCloseAuction}
-                  disabled={closeHeaderMutation.isPending}
-                  className='bg-orange-600 hover:bg-orange-700'
-                >
-                  Close Auction
-                </Button>
-              )}
             </div>
           </div>
         </CardContent>

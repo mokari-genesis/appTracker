@@ -17,6 +17,7 @@ import {
   useAuctionDetails,
 } from '@/hooks/useAuctions'
 import { AuctionHeader } from '@/api/types'
+import { formatMoney } from '@/lib/number'
 
 interface AuctionsPageProps {
   viewAuctionId?: string | null
@@ -51,8 +52,8 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
     },
     {
       key: 'exchangeRate',
-      label: 'Exchange Rate (¥→$)',
-      render: value => Number(value).toFixed(3),
+      label: 'Exchange Rate ($→¥)',
+      render: value => Number(value).toFixed(2),
     },
     {
       key: 'isClosed',
@@ -118,7 +119,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
       name: headerFormData.name || '',
       numberOfPeople: headerFormData.numberOfPeople || 0,
       date: headerFormData.date || '',
-      exchangeRate: headerFormData.exchangeRate || 0.14,
+      exchangeRate: headerFormData.exchangeRate || 7.14,
     }
 
     try {
@@ -197,7 +198,10 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
           </CardHeader>
           <CardContent className='pt-4'>
             <div className='text-3xl font-bold'>
-              ${auctionDetails.reduce((sum, d) => sum + (Number(d.priceSold) || 0), 0).toFixed(2)}
+              {formatMoney(
+                auctionDetails.reduce((sum, d) => sum + (Number(d.priceSold) || 0), 0),
+                2
+              )}
             </div>
             <p className='text-sm text-muted-foreground mt-1'>Total sales value</p>
           </CardContent>
@@ -264,12 +268,12 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='exchange-rate' className='text-base font-medium'>
-                  Exchange Rate (¥ → $)
+                  Exchange Rate ($ → ¥)
                 </Label>
                 <Input
                   id='exchange-rate'
                   type='number'
-                  step='0.001'
+                  step='0.01'
                   value={headerFormData.exchangeRate || ''}
                   onChange={e =>
                     setHeaderFormData({
@@ -277,9 +281,12 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
                       exchangeRate: parseFloat(e.target.value) || 0,
                     })
                   }
-                  placeholder='0.140'
+                  placeholder='7.14'
                   className='h-12 text-base'
                 />
+                <Label htmlFor='exchange-rate' className='text-xs font-medium text-muted-foreground'>
+                  If not specified, it will use 7.14 as default
+                </Label>
               </div>
             </div>
 
