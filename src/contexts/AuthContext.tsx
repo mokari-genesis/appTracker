@@ -1,77 +1,72 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 
 interface User {
-  id: string;
-  username: string;
-  name: string;
+  id: string
+  username: string
+  name: string
 }
 
 interface AuthContextType {
-  user: User | null;
-  login: (username: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  isAuthenticated: boolean;
+  user: User | null
+  login: (username: string, password: string) => Promise<boolean>
+  logout: () => void
+  isAuthenticated: boolean
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
-};
-
-interface AuthProviderProps {
-  children: ReactNode;
+  return context
 }
 
-// Mock users for demo
-const mockUsers = [
-  { id: '1', username: 'admin', password: 'password', name: 'Administrator' },
-  { id: '2', username: 'demo', password: 'demo123', name: 'Demo User' },
-];
+interface AuthProviderProps {
+  children: ReactNode
+}
+
+// Get credentials from environment variables
+const VALID_USERNAME = import.meta.env.VITE_AUCTIONS_USER || ''
+const VALID_PASSWORD = import.meta.env.VITE_AUCTIONS_PASS || ''
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem('auctionApp_user');
+    const storedUser = localStorage.getItem('auctionApp_user')
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      setUser(JSON.parse(storedUser))
     }
-    setIsLoading(false);
-  }, []);
+    setIsLoading(false)
+  }, [])
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    const foundUser = mockUsers.find(
-      (u) => u.username === username && u.password === password
-    );
-
-    if (foundUser) {
+    // Validate against environment variables
+    if (username === VALID_USERNAME && password === VALID_PASSWORD) {
       const userToStore = {
-        id: foundUser.id,
-        username: foundUser.username,
-        name: foundUser.name,
-      };
-      setUser(userToStore);
-      localStorage.setItem('auctionApp_user', JSON.stringify(userToStore));
-      return true;
+        id: '1',
+        username: username,
+        name: 'Auction Manager',
+      }
+      setUser(userToStore)
+      localStorage.setItem('auctionApp_user', JSON.stringify(userToStore))
+      return true
     }
 
-    return false;
-  };
+    return false
+  }
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem('auctionApp_user');
-  };
+    setUser(null)
+    localStorage.removeItem('auctionApp_user')
+  }
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>Loading...</div>
   }
 
   return (
@@ -85,5 +80,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     >
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
