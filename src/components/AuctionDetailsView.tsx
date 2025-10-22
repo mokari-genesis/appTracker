@@ -9,6 +9,7 @@ import { AuctionSummary } from './AuctionSummary'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
 import { CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
+import { formatDateLocal, getTodayDateString } from '@/lib/dates'
 import {
   useAuctionHeaders,
   useAuctionDetails,
@@ -51,6 +52,11 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
   const selectedAuction = auctions.find(a => a.id === auctionId)
 
   const detailColumns: Column<AuctionDetail>[] = [
+    {
+      key: 'date',
+      label: 'Date',
+      render: value => formatDateLocal(value),
+    },
     {
       key: 'productName',
       label: 'Product',
@@ -124,10 +130,7 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
     }
 
     setEditingDetail(detail)
-    setDetailFormData({
-      ...detail,
-      date: detail.date ? detail.date.split('T')[0] : '',
-    })
+    setDetailFormData(detail)
     setIsDetailDialogOpen(true)
   }
 
@@ -180,7 +183,7 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
       winner1ClientId: detailFormData.winner1ClientId || null,
       winner2ClientId: detailFormData.winner2ClientId || null,
       lot: detailFormData.lot || '',
-      date: detailFormData.date || new Date().toISOString().split('T')[0],
+      date: selectedAuction?.date || getTodayDateString(),
       highestBidRmb: detailFormData.highestBidRmb || null,
       pricePerKg: prices.pricePerKg || null,
       priceSold: prices.priceSold || null,
@@ -370,12 +373,7 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
               <div className='bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-blue-100'>
                 <p className='text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1'>Date</p>
                 <p className='text-xl font-bold text-blue-900'>
-                  {(() => {
-                    const dateStr = selectedAuction.date.split('T')[0]
-                    const [year, month, day] = dateStr.split('-')
-                    const date = new Date(Number(year), Number(month) - 1, Number(day))
-                    return format(date, 'MMM dd, yyyy')
-                  })()}
+                  {formatDateLocal(selectedAuction.date)}
                 </p>
               </div>
               <div className='bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-blue-100'>
@@ -502,19 +500,6 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
                 onChange={clientId => setDetailFormData({ ...detailFormData, winner2ClientId: clientId })}
                 label='Winner 2 (Optional)'
                 placeholder='Search winner...'
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='detail-date' className='text-base font-medium'>
-                Date
-              </Label>
-              <Input
-                id='detail-date'
-                type='date'
-                value={detailFormData.date || ''}
-                onChange={e => setDetailFormData({ ...detailFormData, date: e.target.value })}
-                className='h-12 text-base'
               />
             </div>
 

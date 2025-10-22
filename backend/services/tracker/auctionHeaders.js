@@ -1,5 +1,5 @@
 const joi = require('joi')
-const { auctionHeaderRepo } = require('entityQueries/index')
+const { auctionHeaderRepo, auctionDetailRepo } = require('entityQueries/index')
 
 const getAuctionHeadersSchema = joi.object({
   page: joi.number().integer().min(0).required().default(0).failover(0),
@@ -72,7 +72,22 @@ const updateAuctionHeader = async ({ request }) => {
     throw new Error(`Invalid Parameters: ${error.message}`)
   }
 
-  return auctionHeaderRepo.updateAuctionHeader(value)
+  // Get current auction header to check if exchange rate changed
+  const currentHeaders = await auctionHeaderRepo.getAuctionHeaders({ id: value.id })
+  const currentHeader = currentHeaders[0]
+
+  // Update the auction header
+  const result = await auctionHeaderRepo.updateAuctionHeader(value)
+
+  // If exchange rate changed, recalculate all detail prices
+  if (currentHeader && currentHeader.exchangeRate !== value.exchangeRate) {
+    await auctionDetailRepo.recalculateAuctionDetailPrices({
+      auctionId: value.id,
+      exchangeRate: value.exchangeRate || 7.14,
+    })
+  }
+
+  return result
 }
 
 const closeAuctionHeaderSchema = joi.object({

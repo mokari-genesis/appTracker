@@ -147,10 +147,33 @@ const toggleAuctionDetailSold = fetchResultMySQL(({ id, isSold }, connection) =>
   )
 )
 
+const recalculateAuctionDetailPrices = fetchResultMySQL(({ auctionId, exchangeRate }, connection) =>
+  connection.query(
+    `
+      UPDATE auction_details
+      SET 
+        price_sold = CASE 
+          WHEN highest_bid_rmb IS NOT NULL THEN highest_bid_rmb / ?
+          ELSE NULL
+        END,
+        price_per_kg = CASE 
+          WHEN highest_bid_rmb IS NOT NULL AND weight > 0 THEN highest_bid_rmb / weight / ?
+          ELSE NULL
+        END,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE 
+        auction_id = ?
+        AND is_deleted = false
+    `,
+    [exchangeRate, exchangeRate, auctionId]
+  )
+)
+
 module.exports = {
   getAuctionDetails,
   insertAuctionDetail,
   updateAuctionDetail,
   deleteAuctionDetail,
   toggleAuctionDetailSold,
+  recalculateAuctionDetailPrices,
 }

@@ -4,6 +4,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { AuctionDetail } from '@/api/types'
 import { formatMoney, formatYuan } from '@/lib/number'
 import { Info } from 'lucide-react'
+import { formatDateLocal } from '@/lib/dates'
 
 interface AuctionSummaryProps {
   details: AuctionDetail[]
@@ -20,7 +21,7 @@ interface ProductGroup {
   avgPricePerKg: number
 }
 
-export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details }) => {
+export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details, exchangeRate }) => {
   const productGroups = details.reduce((acc, detail) => {
     const productName = detail.productName || 'Unknown Product'
 
@@ -62,11 +63,15 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details }) => {
     totalHighestBid: productGroupsArray.reduce((sum, group) => sum + group.totalHighestBid, 0),
     totalPriceSold: productGroupsArray.reduce((sum, group) => sum + group.totalPriceSold, 0),
     avgPricePerKg: 0,
+    commission: 0,
   }
 
   if (grandTotals.totalWeight > 0) {
     grandTotals.avgPricePerKg = grandTotals.totalPriceSold / grandTotals.totalWeight
   }
+
+  // Calculate commission: 2% of total RMB converted to USD
+  grandTotals.commission = (grandTotals.totalHighestBid * 0.02) / (exchangeRate || 7.14)
 
   return (
     <TooltipProvider>
@@ -83,7 +88,7 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details }) => {
                   <h3 className='text-lg font-bold text-gray-900'>📊 Grand Totals</h3>
                   <p className='text-xs font-semibold text-gray-700 bg-white/60 px-3 py-1 rounded-full'>Only sold items included</p>
                 </div>
-                <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
+                <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
                   <div className='bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 shadow-sm border border-green-100'>
                     <p className='text-xs font-bold text-gray-600 uppercase tracking-wide'>Total in USD</p>
                     <p className='text-xl font-bold text-green-700 mt-1'>{formatMoney(grandTotals.totalPriceSold, 0)}</p>
@@ -91,6 +96,10 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details }) => {
                   <div className='bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 shadow-sm border border-blue-100'>
                     <p className='text-xs font-bold text-gray-600 uppercase tracking-wide'>Total in RMB</p>
                     <p className='text-xl font-bold text-blue-700 mt-1'>{formatYuan(grandTotals.totalHighestBid, 0)}</p>
+                  </div>
+                  <div className='bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 shadow-sm border border-purple-100'>
+                    <p className='text-xs font-bold text-gray-600 uppercase tracking-wide'>Commission (2%)</p>
+                    <p className='text-xl font-bold text-purple-700 mt-1'>{formatMoney(grandTotals.commission, 2)}</p>
                   </div>
                   <div className='bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 shadow-sm border border-indigo-100'>
                     <div className='flex items-center gap-1'>
@@ -133,6 +142,9 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details }) => {
                     <thead className='bg-gray-50'>
                       <tr>
                         <th className='px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider'>
+                          Date
+                        </th>
+                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider'>
                           Weight (kg)
                         </th>
                         <th className='px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider'>
@@ -167,6 +179,9 @@ export const AuctionSummary: React.FC<AuctionSummaryProps> = ({ details }) => {
                     <tbody className='bg-white divide-y divide-gray-200'>
                       {group.details.map((detail, detailIndex) => (
                         <tr key={detailIndex} className='hover:bg-gray-50'>
+                          <td className='px-4 py-3 text-sm text-gray-900'>
+                            {formatDateLocal(detail.date)}
+                          </td>
                           <td className='px-4 py-3 text-sm text-gray-900'>{Number(detail.weight).toFixed(2)}</td>
                           <td className='px-4 py-3 text-sm text-gray-900'>{detail.bagNumber || '-'}</td>
                           <td className='px-4 py-3 text-sm text-gray-900'>{detail.numberOfPieces || '-'}</td>

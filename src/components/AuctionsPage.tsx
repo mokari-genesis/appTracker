@@ -7,8 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DataTable, Column, CustomAction } from './DataTable'
 import { toast } from '@/hooks/use-toast'
-import { format } from 'date-fns'
-import { Calendar, DollarSign, Users } from 'lucide-react'
+import { Calendar, DollarSign, Users, Coins } from 'lucide-react'
 import {
   useAuctionHeaders,
   useCreateAuctionHeader,
@@ -17,7 +16,8 @@ import {
   useAuctionDetails,
 } from '@/hooks/useAuctions'
 import { AuctionHeader } from '@/api/types'
-import { formatMoney } from '@/lib/number'
+import { formatMoney, formatYuan } from '@/lib/number'
+import { formatDateLocal, toInputDateFormat, getTodayDateString } from '@/lib/dates'
 
 interface AuctionsPageProps {
   viewAuctionId?: string | null
@@ -48,19 +48,47 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
     {
       key: 'date',
       label: 'Date',
-      render: value => {
-        if (!value) return '--'
-        const dateStr = value.split('T')[0] // Get YYYY-MM-DD
-        const [year, month, day] = dateStr.split('-')
-        // Create date in local timezone
-        const date = new Date(Number(year), Number(month) - 1, Number(day))
-        return format(date, 'MMM dd, yyyy')
-      },
+      render: value => formatDateLocal(value),
     },
     {
       key: 'exchangeRate',
       label: 'Exchange Rate ($→¥)',
       render: value => Number(value).toFixed(2),
+    },
+    {
+      key: 'id',
+      label: 'Total USD',
+      render: (_value, row) => {
+        const auctionId = row.id
+        const total = auctionDetails
+          .filter(d => d.auctionId === auctionId && d.isSold)
+          .reduce((sum, d) => sum + (Number(d.priceSold) || 0), 0)
+        return formatMoney(total, 0)
+      },
+    },
+    {
+      key: 'id',
+      label: 'Total RMB',
+      render: (_value, row) => {
+        const auctionId = row.id
+        const total = auctionDetails
+          .filter(d => d.auctionId === auctionId && d.isSold)
+          .reduce((sum, d) => sum + (Number(d.highestBidRmb) || 0), 0)
+        return formatYuan(total, 0)
+      },
+    },
+    {
+      key: 'id',
+      label: 'Commission (2%)',
+      render: (_value, row) => {
+        const auctionId = row.id
+        const exchangeRate = row.exchangeRate || 7.14
+        const totalRmb = auctionDetails
+          .filter(d => d.auctionId === auctionId && d.isSold)
+          .reduce((sum, d) => sum + (Number(d.highestBidRmb) || 0), 0)
+        const commission = (totalRmb * 0.02) / exchangeRate
+        return formatMoney(commission, 2)
+      },
     },
     {
       key: 'isClosed',
@@ -80,8 +108,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
   // Header CRUD operations
   const handleAddHeader = () => {
     setEditingHeader(null)
-    const today = new Date().toISOString().split('T')[0]
-    setHeaderFormData({ date: today })
+    setHeaderFormData({ date: getTodayDateString() })
     setIsHeaderDialogOpen(true)
   }
 
@@ -89,7 +116,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
     setEditingHeader(header)
     setHeaderFormData({
       ...header,
-      date: header.date ? header.date.split('T')[0] : '',
+      date: toInputDateFormat(header.date),
     })
     setIsHeaderDialogOpen(true)
   }
@@ -175,14 +202,14 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
       </div>
 
       {/* Overview Cards */}
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
         <Card className='shadow-sm'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-base font-semibold'>Total Auctions</CardTitle>
             <Calendar className='h-6 w-6 text-muted-foreground' />
           </CardHeader>
           <CardContent className='pt-4'>
-            <div className='text-3xl font-bold'>{auctions.length}</div>
+            <div className='text-xl lg:text-2xl font-bold'>{auctions.length}</div>
             <p className='text-sm text-muted-foreground mt-1'>Active auction events</p>
           </CardContent>
         </Card>
@@ -193,24 +220,64 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
             <Users className='h-6 w-6 text-muted-foreground' />
           </CardHeader>
           <CardContent className='pt-4'>
-            <div className='text-3xl font-bold'>{auctions.reduce((sum, a) => sum + (a.numberOfPeople || 0), 0)}</div>
+            <div className='text-xl lg:text-2xl font-bold'>
+              {auctions.reduce((sum, a) => sum + (a.numberOfPeople || 0), 0)}
+            </div>
             <p className='text-sm text-muted-foreground mt-1'>Across all auctions</p>
           </CardContent>
         </Card>
 
         <Card className='shadow-sm'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-base font-semibold'>Total Revenue</CardTitle>
+            <CardTitle className='text-base font-semibold'>Total Revenue (USD)</CardTitle>
             <DollarSign className='h-6 w-6 text-muted-foreground' />
           </CardHeader>
           <CardContent className='pt-4'>
-            <div className='text-3xl font-bold'>
+            <div className='text-xl lg:text-2xl font-bold'>
               {formatMoney(
                 auctionDetails.reduce((sum, d) => sum + (Number(d.priceSold) || 0), 0),
-                2
+                0
               )}
             </div>
             <p className='text-sm text-muted-foreground mt-1'>Total sales value</p>
+          </CardContent>
+        </Card>
+
+        <Card className='shadow-sm'>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-base font-semibold'>Total RMB</CardTitle>
+            <Coins className='h-6 w-6 text-muted-foreground' />
+          </CardHeader>
+          <CardContent className='pt-4'>
+            <div className='text-xl lg:text-2xl font-bold'>
+              {formatYuan(
+                auctionDetails.filter(d => d.isSold).reduce((sum, d) => sum + (Number(d.highestBidRmb) || 0), 0),
+                0
+              )}
+            </div>
+            <p className='text-sm text-muted-foreground mt-1'>Total highest bids</p>
+          </CardContent>
+        </Card>
+
+        <Card className='shadow-sm border-purple-200 bg-purple-50/30'>
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-base font-semibold text-purple-900'>Total Commission</CardTitle>
+            <DollarSign className='h-6 w-6 text-purple-600' />
+          </CardHeader>
+          <CardContent className='pt-4'>
+            <div className='text-xl lg:text-2xl font-bold text-purple-700'>
+              {formatMoney(
+                auctions.reduce((sum, auction) => {
+                  const totalRmb = auctionDetails
+                    .filter(d => d.auctionId === auction.id && d.isSold)
+                    .reduce((detailSum, d) => detailSum + (Number(d.highestBidRmb) || 0), 0)
+                  const commission = (totalRmb * 0.02) / (auction.exchangeRate || 7.14)
+                  return sum + commission
+                }, 0),
+                2
+              )}
+            </div>
+            <p className='text-sm text-purple-700 mt-1'>2% of RMB sales</p>
           </CardContent>
         </Card>
       </div>

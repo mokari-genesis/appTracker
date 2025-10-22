@@ -48,6 +48,7 @@ export const useUpdateAuctionHeader = () => {
     mutationFn: updateAuctionHeader,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.AuctionHeaders] })
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.AuctionDetails] })
     },
   })
 }
