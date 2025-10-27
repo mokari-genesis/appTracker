@@ -235,7 +235,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
           <CardContent className='pt-4'>
             <div className='text-xl lg:text-2xl font-bold'>
               {formatMoney(
-                auctionDetails.reduce((sum, d) => sum + (Number(d.priceSold) || 0), 0),
+                auctionDetails.filter(d => d.isSold).reduce((sum, d) => sum + (Number(d.priceSold) || 0), 0),
                 0
               )}
             </div>
@@ -274,7 +274,18 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
                   const commission = (totalRmb * 0.02) / (auction.exchangeRate || 7.14)
                   return sum + commission
                 }, 0),
-                2
+                0
+              )}
+            </div>
+            <div className='text-base font-semibold text-purple-600 mt-2'>
+              {formatYuan(
+                auctions.reduce((sum, auction) => {
+                  const totalRmb = auctionDetails
+                    .filter(d => d.auctionId === auction.id && d.isSold)
+                    .reduce((detailSum, d) => detailSum + (Number(d.highestBidRmb) || 0), 0)
+                  return sum + totalRmb * 0.02
+                }, 0),
+                0
               )}
             </div>
             <p className='text-sm text-purple-700 mt-1'>2% of RMB sales</p>
