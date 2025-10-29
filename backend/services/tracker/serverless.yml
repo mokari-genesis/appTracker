@@ -40,6 +40,8 @@ provider:
     DATABASE_NAME: ${self:custom.apisecret.dbInstanceIdentifier}
     DATABASE_PASSWORD: ${self:custom.apisecret.password}
     DATABASE_PORT: ${self:custom.apisecret.port}
+    METABASE_SITE_URL: ${self:custom.apisecret.metabaseSiteUrl}
+    METABASE_SECRET_KEY: ${self:custom.apisecret.metabaseSecretKey}
 
   iamRoleStatements:
     - Effect: Allow

@@ -10,6 +10,7 @@ module.exports.router = () => {
         ...trackerRoutes.productsRoute,
         ...trackerRoutes.auctionHeadersRoute,
         ...trackerRoutes.auctionDetailsRoute,
+        ...trackerRoutes.metabaseRoute,
       ],
     },
   ]
