@@ -8,6 +8,7 @@ import {
   fetchAuctionDetails,
   fetchAuctionHeaders,
   fetchNextAuctionHeaderId,
+  fetchAuctionMetrics,
   GetAuctionDetailsParams,
   GetAuctionHeadersParams,
   updateAuctionDetail,
@@ -29,6 +30,13 @@ export const useNextAuctionHeaderId = () => {
   return useQuery({
     queryKey: [QueryKeys.AuctionHeaders, 'next-id'],
     queryFn: fetchNextAuctionHeaderId,
+  })
+}
+
+export const useAuctionMetrics = () => {
+  return useQuery({
+    queryKey: [QueryKeys.AuctionHeaders, 'metrics'],
+    queryFn: fetchAuctionMetrics,
   })
 }
 

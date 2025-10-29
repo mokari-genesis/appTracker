@@ -14,6 +14,12 @@ const auctionHeadersRoute = [
     public: false,
   },
   {
+    path: 'auction-headers/metrics',
+    method: 'GET',
+    handler: auctionHeaders.getAuctionMetrics,
+    public: false,
+  },
+  {
     path: 'auction-headers',
     method: 'POST',
     handler: auctionHeaders.addAuctionHeader,

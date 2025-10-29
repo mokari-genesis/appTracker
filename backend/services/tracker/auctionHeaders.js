@@ -3,7 +3,7 @@ const { auctionHeaderRepo, auctionDetailRepo } = require('entityQueries/index')
 
 const getAuctionHeadersSchema = joi.object({
   page: joi.number().integer().min(0).required().default(0).failover(0),
-  limit: joi.number().integer().min(1).allow(null),
+  limit: joi.number().integer().min(1).allow(null).default(null),
   id: joi.number().integer().allow(null).optional(),
 })
 const getAuctionHeaders = async ({ request }) => {
@@ -13,6 +13,20 @@ const getAuctionHeaders = async ({ request }) => {
 
   if (error) {
     throw new Error(`Invalid Parameters: ${error.message}`)
+  }
+
+  // If no limit is provided, return all results without pagination
+  if (!value.limit) {
+    const result = await auctionHeaderRepo.getAuctionHeaders({
+      page: 0,
+      limit: null,
+      id: value.id,
+    })
+
+    return {
+      auctionHeaders: result,
+      hasNextPage: false,
+    }
   }
 
   const nextPageLimit = value.limit + 1
@@ -129,6 +143,63 @@ const deleteAuctionHeader = async ({ request }) => {
   return auctionHeaderRepo.deleteAuctionHeader(value)
 }
 
+const getAuctionMetrics = async () => {
+  const data = await auctionHeaderRepo.getAuctionMetricsData({})
+
+  if (!data || data.length === 0) {
+    return {
+      totalAuctions: 0,
+      totalParticipants: 0,
+      totalRevenueUsd: 0,
+      totalRmb: 0,
+      totalCommissionRmb: 0,
+      totalCommissionUsd: 0,
+    }
+  }
+
+  const uniqueAuctionIds = new Set()
+  let totalParticipants = 0
+  let totalRevenueUsd = 0
+  let totalRmb = 0
+  let totalCommissionRmb = 0
+  let totalCommissionUsd = 0
+
+  data.forEach(row => {
+    // Count unique auctions and sum participants only once per auction
+    if (!uniqueAuctionIds.has(row.id)) {
+      uniqueAuctionIds.add(row.id)
+      totalParticipants += Number(row.numberOfPeople) || 0
+    }
+
+    // Only process sold details
+    // Verify that detail_id exists and isSold is truthy (1, true, "1")
+    if (row.detailId && (row.isSold === 1 || row.isSold === true || row.isSold === '1')) {
+      const priceSold = Number(row.priceSold) || 0
+      const highestBidRmb = Number(row.highestBidRmb) || 0
+      const exchangeRate = Number(row.exchangeRate) || 7.14
+
+      totalRevenueUsd += priceSold
+      totalRmb += highestBidRmb
+
+      // Calculate commission (2% of RMB)
+      const commissionRmb = highestBidRmb * 0.02
+      const commissionUsd = commissionRmb / exchangeRate
+
+      totalCommissionRmb += commissionRmb
+      totalCommissionUsd += commissionUsd
+    }
+  })
+
+  return {
+    totalAuctions: uniqueAuctionIds.size,
+    totalParticipants,
+    totalRevenueUsd,
+    totalRmb,
+    totalCommissionRmb,
+    totalCommissionUsd,
+  }
+}
+
 module.exports = {
   getAuctionHeaders,
   getNextAuctionHeaderId,
@@ -137,4 +208,5 @@ module.exports = {
   closeAuctionHeader,
   reopenAuctionHeader,
   deleteAuctionHeader,
+  getAuctionMetrics,
 }

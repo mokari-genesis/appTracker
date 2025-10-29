@@ -120,6 +120,27 @@ const deleteAuctionHeader = fetchResultMySQL(({ id }, connection) =>
   )
 )
 
+const getAuctionMetricsData = fetchResultMySQL((params, connection) =>
+  connection.query(
+    `
+    SELECT 
+      ah.id,
+      ah.number_of_people,
+      ah.exchange_rate,
+      ad.id as detail_id,
+      ad.price_sold,
+      ad.highest_bid_rmb,
+      ad.is_sold
+    FROM 
+      auction_headers ah
+      LEFT JOIN auction_details ad ON ah.id = ad.auction_id AND ad.is_deleted = false
+    WHERE 
+      ah.is_deleted = false
+  `,
+    []
+  )
+)
+
 module.exports = {
   getAuctionHeaders,
   getNextAuctionHeaderId,
@@ -128,4 +149,5 @@ module.exports = {
   closeAuctionHeader,
   reopenAuctionHeader,
   deleteAuctionHeader,
+  getAuctionMetricsData,
 }

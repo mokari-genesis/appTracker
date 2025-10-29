@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useClients, useCreateClient, useUpdateClient, useDeleteClient } from '@/hooks/useClients'
 import { Client } from '@/api/types'
 
@@ -15,10 +16,17 @@ const ClientsPage: React.FC = () => {
   const [editingClient, setEditingClient] = useState<Client | null>(null)
   const [formData, setFormData] = useState<Partial<Client>>({})
 
-  const { data } = useClients()
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0)
+  const pageLimit = 100
+
+  const { data } = useClients({ page: currentPage, limit: pageLimit })
   const createClientMutation = useCreateClient()
   const updateClientMutation = useUpdateClient()
   const deleteClientMutation = useDeleteClient()
+
+  const clients = data?.clients || []
+  const hasNextPage = data?.hasNextPage || false
 
   const columns: Column<Client>[] = [
     { key: 'name', label: 'Name' },
@@ -105,15 +113,44 @@ const ClientsPage: React.FC = () => {
 
   return (
     <>
-      <DataTable
-        title='Clients'
-        data={data?.clients || []}
-        columns={columns}
-        onAdd={handleAdd}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        searchPlaceholder='Search clients...'
-      />
+      <div className='space-y-4'>
+        <DataTable
+          title='Clients'
+          data={clients}
+          columns={columns}
+          onAdd={handleAdd}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          searchPlaceholder='Search clients...'
+        />
+
+        {/* Pagination Controls */}
+        <div className='flex items-center justify-between px-2'>
+          <div className='text-sm text-muted-foreground'>
+            Page {currentPage + 1} • Showing {clients.length} clients
+          </div>
+          <div className='flex gap-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+              disabled={currentPage === 0}
+            >
+              <ChevronLeft className='h-4 w-4 mr-1' />
+              Previous
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              disabled={!hasNextPage}
+            >
+              Next
+              <ChevronRight className='h-4 w-4 ml-1' />
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className='sm:max-w-[500px]'>

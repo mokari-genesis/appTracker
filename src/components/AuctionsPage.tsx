@@ -7,13 +7,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DataTable, Column, CustomAction } from './DataTable'
 import { toast } from '@/hooks/use-toast'
-import { Calendar, DollarSign, Users, Coins } from 'lucide-react'
+import { Calendar, DollarSign, Users, Coins, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   useAuctionHeaders,
   useCreateAuctionHeader,
   useUpdateAuctionHeader,
   useDeleteAuctionHeader,
   useAuctionDetails,
+  useAuctionMetrics,
 } from '@/hooks/useAuctions'
 import { AuctionHeader } from '@/api/types'
 import { formatMoney, formatYuan } from '@/lib/number'
@@ -30,9 +31,14 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
   const [editingHeader, setEditingHeader] = useState<AuctionHeader | null>(null)
   const [headerFormData, setHeaderFormData] = useState<Partial<AuctionHeader>>({})
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0)
+  const pageLimit = 100
+
   // Fetch data
-  const { data: headersData } = useAuctionHeaders()
+  const { data: headersData } = useAuctionHeaders({ page: currentPage, limit: pageLimit })
   const { data: detailsData } = useAuctionDetails({})
+  const { data: metricsData } = useAuctionMetrics()
 
   // Mutations for headers
   const createHeaderMutation = useCreateAuctionHeader()
@@ -41,6 +47,15 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
 
   const auctions = headersData?.auctionHeaders || []
   const auctionDetails = detailsData?.auctionDetails || []
+  const hasNextPage = headersData?.hasNextPage || false
+  const metrics = metricsData || {
+    totalAuctions: 0,
+    totalParticipants: 0,
+    totalRevenueUsd: 0,
+    totalRmb: 0,
+    totalCommissionRmb: 0,
+    totalCommissionUsd: 0,
+  }
 
   const headerColumns: Column<AuctionHeader>[] = [
     { key: 'name', label: 'Auction Name' },
@@ -209,7 +224,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
             <Calendar className='h-6 w-6 text-muted-foreground' />
           </CardHeader>
           <CardContent className='pt-4'>
-            <div className='text-xl lg:text-2xl font-bold'>{auctions.length}</div>
+            <div className='text-xl lg:text-2xl font-bold'>{metrics.totalAuctions}</div>
             <p className='text-sm text-muted-foreground mt-1'>Active auction events</p>
           </CardContent>
         </Card>
@@ -220,9 +235,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
             <Users className='h-6 w-6 text-muted-foreground' />
           </CardHeader>
           <CardContent className='pt-4'>
-            <div className='text-xl lg:text-2xl font-bold'>
-              {auctions.reduce((sum, a) => sum + (a.numberOfPeople || 0), 0)}
-            </div>
+            <div className='text-xl lg:text-2xl font-bold'>{metrics.totalParticipants}</div>
             <p className='text-sm text-muted-foreground mt-1'>Across all auctions</p>
           </CardContent>
         </Card>
@@ -233,12 +246,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
             <DollarSign className='h-6 w-6 text-muted-foreground' />
           </CardHeader>
           <CardContent className='pt-4'>
-            <div className='text-xl lg:text-2xl font-bold'>
-              {formatMoney(
-                auctionDetails.filter(d => d.isSold).reduce((sum, d) => sum + (Number(d.priceSold) || 0), 0),
-                0
-              )}
-            </div>
+            <div className='text-xl lg:text-2xl font-bold'>{formatMoney(metrics.totalRevenueUsd, 0)}</div>
             <p className='text-sm text-muted-foreground mt-1'>Total sales value</p>
           </CardContent>
         </Card>
@@ -249,12 +257,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
             <Coins className='h-6 w-6 text-muted-foreground' />
           </CardHeader>
           <CardContent className='pt-4'>
-            <div className='text-xl lg:text-2xl font-bold'>
-              {formatYuan(
-                auctionDetails.filter(d => d.isSold).reduce((sum, d) => sum + (Number(d.highestBidRmb) || 0), 0),
-                0
-              )}
-            </div>
+            <div className='text-xl lg:text-2xl font-bold'>{formatYuan(metrics.totalRmb, 0)}</div>
             <p className='text-sm text-muted-foreground mt-1'>Total highest bids</p>
           </CardContent>
         </Card>
@@ -266,27 +269,10 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
           </CardHeader>
           <CardContent className='pt-4'>
             <div className='text-xl lg:text-2xl font-bold text-purple-700'>
-              {formatMoney(
-                auctions.reduce((sum, auction) => {
-                  const totalRmb = auctionDetails
-                    .filter(d => d.auctionId === auction.id && d.isSold)
-                    .reduce((detailSum, d) => detailSum + (Number(d.highestBidRmb) || 0), 0)
-                  const commission = (totalRmb * 0.02) / (auction.exchangeRate || 7.14)
-                  return sum + commission
-                }, 0),
-                0
-              )}
+              {formatMoney(metrics.totalCommissionUsd, 0)}
             </div>
             <div className='text-base font-semibold text-purple-600 mt-2'>
-              {formatYuan(
-                auctions.reduce((sum, auction) => {
-                  const totalRmb = auctionDetails
-                    .filter(d => d.auctionId === auction.id && d.isSold)
-                    .reduce((detailSum, d) => detailSum + (Number(d.highestBidRmb) || 0), 0)
-                  return sum + totalRmb * 0.02
-                }, 0),
-                0
-              )}
+              {formatYuan(metrics.totalCommissionRmb, 0)}
             </div>
             <p className='text-sm text-purple-700 mt-1'>2% of RMB sales</p>
           </CardContent>
@@ -294,16 +280,45 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
       </div>
 
       {/* Auction Management Table */}
-      <DataTable
-        title='Auction Events'
-        data={auctions}
-        columns={headerColumns}
-        onAdd={handleAddHeader}
-        onEdit={handleEditHeader}
-        onDelete={handleDeleteHeader}
-        customActions={getHeaderCustomActions}
-        searchPlaceholder='Search auctions...'
-      />
+      <div className='space-y-4'>
+        <DataTable
+          title='Auction Events'
+          data={auctions}
+          columns={headerColumns}
+          onAdd={handleAddHeader}
+          onEdit={handleEditHeader}
+          onDelete={handleDeleteHeader}
+          customActions={getHeaderCustomActions}
+          searchPlaceholder='Search auctions...'
+        />
+
+        {/* Pagination Controls */}
+        <div className='flex items-center justify-between px-2'>
+          <div className='text-sm text-muted-foreground'>
+            Page {currentPage + 1} • Showing {auctions.length} auctions
+          </div>
+          <div className='flex gap-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+              disabled={currentPage === 0}
+            >
+              <ChevronLeft className='h-4 w-4 mr-1' />
+              Previous
+            </Button>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              disabled={!hasNextPage}
+            >
+              Next
+              <ChevronRight className='h-4 w-4 ml-1' />
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* Header Dialog */}
       <Dialog open={isHeaderDialogOpen} onOpenChange={setIsHeaderDialogOpen}>

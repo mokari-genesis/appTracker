@@ -126,6 +126,27 @@ const deleteAuctionHeader = async (id: string): Promise<MutationResponse> => {
   return result.data
 }
 
+export interface AuctionMetrics {
+  totalAuctions: number
+  totalParticipants: number
+  totalRevenueUsd: number
+  totalRmb: number
+  totalCommissionRmb: number
+  totalCommissionUsd: number
+}
+
+const fetchAuctionMetrics = async (): Promise<AuctionMetrics> => {
+  const response = await fetch(`${API_BASE_URL}/auction-headers/metrics`)
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch auction metrics')
+  }
+
+  const result = await response.json()
+
+  return result.data
+}
+
 // Auction Details
 export interface GetAuctionDetailsParams {
   page?: number
@@ -225,6 +246,7 @@ export {
   closeAuctionHeader,
   reopenAuctionHeader,
   deleteAuctionHeader,
+  fetchAuctionMetrics,
   fetchAuctionDetails,
   createAuctionDetail,
   updateAuctionDetail,

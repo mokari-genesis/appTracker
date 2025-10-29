@@ -3,7 +3,7 @@ const { clientRepo } = require('entityQueries/index')
 
 const getClientsSchema = joi.object({
   page: joi.number().integer().min(0).required().default(0).failover(0),
-  limit: joi.number().integer().min(1).allow(null),
+  limit: joi.number().integer().min(1).allow(null).default(null),
   id: joi.number().integer().allow(null).optional(),
 })
 const getClients = async ({ request }) => {
@@ -11,6 +11,20 @@ const getClients = async ({ request }) => {
 
   if (error) {
     throw new Error(`Invalid Parameters: ${error.message}`)
+  }
+
+  // If no limit is provided, return all results without pagination
+  if (!value.limit) {
+    const result = await clientRepo.getClients({
+      page: 0,
+      limit: null,
+      id: value.id,
+    })
+
+    return {
+      clients: result,
+      hasNextPage: false,
+    }
   }
 
   const nextPageLimit = value.limit + 1
