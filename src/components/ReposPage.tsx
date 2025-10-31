@@ -37,7 +37,14 @@ const ReposPage: React.FC = () => {
       <div className='flex items-center justify-between'>
         <div>
           <h1 className='text-4xl font-bold text-gray-900'>Reports & Analytics</h1>
-          <p className='text-lg text-gray-600 mt-2'>View comprehensive auction analytics and reports</p>
+          <a
+            className='mt-2 text-lg'
+            href='https://metabase.traestodo.net/dashboard/8?start_date=2025-10-01&end_date=2025-10-31'
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            Go to Metabase
+          </a>
         </div>
       </div>
 
