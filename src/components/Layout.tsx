@@ -14,10 +14,10 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
   const { user, logout } = useAuth()
 
   const navigation = [
+    { name: 'Analytics', id: 'repos', icon: ChartLine },
     { name: 'Clients', id: 'clients', icon: Users },
     { name: 'Categories', id: 'categories', icon: Tag },
     { name: 'Products', id: 'products', icon: Package },
-    { name: 'Analytics', id: 'repos', icon: ChartLine },
     { name: 'Auctions', id: 'auctions', icon: Gavel },
   ]
 

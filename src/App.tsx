@@ -12,7 +12,7 @@ import AuctionDetailsView from './components/AuctionDetailsView'
 
 const AppContent: React.FC = () => {
   const { isAuthenticated } = useAuth()
-  const [currentPage, setCurrentPage] = useState('clients')
+  const [currentPage, setCurrentPage] = useState('repos')
   const [selectedAuctionId, setSelectedAuctionId] = useState<string | null>(null)
 
   if (!isAuthenticated) {
