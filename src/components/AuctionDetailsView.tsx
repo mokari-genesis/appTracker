@@ -9,7 +9,7 @@ import { AuctionSummary } from './AuctionSummary'
 import { toast } from '@/hooks/use-toast'
 import { format } from 'date-fns'
 import { CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
-import { formatDateLocal, getTodayDateString } from '@/lib/dates'
+import { formatDateLocal, getTodayDateString, toInputDateFormat } from '@/lib/dates'
 import {
   useAuctionHeaders,
   useAuctionDetails,
@@ -183,7 +183,7 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
       winner1ClientId: detailFormData.winner1ClientId || null,
       winner2ClientId: detailFormData.winner2ClientId || null,
       lot: detailFormData.lot || '',
-      date: selectedAuction?.date || getTodayDateString(),
+      date: toInputDateFormat(selectedAuction?.date) || getTodayDateString(),
       highestBidRmb: detailFormData.highestBidRmb || null,
       pricePerKg: prices.pricePerKg || null,
       priceSold: prices.priceSold || null,
@@ -243,7 +243,7 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
   const handleCloseAuction = async () => {
     if (!selectedAuction) return
 
-    if (window.confirm(`Are you sure you want to close "${selectedAuction.name}"?`)) {
+    if (window.confirm(`Are you sure you want to close "${selectedAuction.auctionHouseName}"?`)) {
       try {
         await closeHeaderMutation.mutateAsync(selectedAuction.id)
         toast({
@@ -263,7 +263,7 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
   const handleReopenAuction = async () => {
     if (!selectedAuction) return
 
-    if (window.confirm(`Are you sure you want to reopen "${selectedAuction.name}"?`)) {
+    if (window.confirm(`Are you sure you want to reopen "${selectedAuction.auctionHouseName}"?`)) {
       try {
         await reopenHeaderMutation.mutateAsync(selectedAuction.id)
         toast({
@@ -364,7 +364,7 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
             <div className='grid grid-cols-2 md:grid-cols-4 gap-4 flex-1'>
               <div className='bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-blue-100'>
                 <p className='text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1'>Auction Name</p>
-                <p className='text-xl font-bold text-blue-900'>{selectedAuction.name}</p>
+                <p className='text-xl font-bold text-blue-900'>{selectedAuction.auctionHouseName}</p>
               </div>
               <div className='bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-blue-100'>
                 <p className='text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1'>Participants</p>
@@ -372,9 +372,7 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
               </div>
               <div className='bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-blue-100'>
                 <p className='text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1'>Date</p>
-                <p className='text-xl font-bold text-blue-900'>
-                  {formatDateLocal(selectedAuction.date)}
-                </p>
+                <p className='text-xl font-bold text-blue-900'>{formatDateLocal(selectedAuction.date)}</p>
               </div>
               <div className='bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-blue-100'>
                 <p className='text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1'>Exchange Rate</p>
@@ -388,12 +386,13 @@ const AuctionDetailsView: React.FC<AuctionDetailsViewProps> = ({ auctionId, onBa
       {selectedAuction.isClosed ? (
         <AuctionSummary
           details={auctionDetails}
-          auctionName={selectedAuction.name}
+          auctionName={selectedAuction.auctionHouseName || '--'}
           exchangeRate={selectedAuction.exchangeRate || 0}
+          commissionRate={selectedAuction.commissionRate || 0.02}
         />
       ) : (
         <DataTable
-          title={`Auction Details - ${selectedAuction.name}`}
+          title={`Auction Details - ${selectedAuction.auctionHouseName}`}
           data={auctionDetails}
           columns={detailColumns}
           onAdd={handleAddDetail}

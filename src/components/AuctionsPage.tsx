@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DataTable, Column, CustomAction } from './DataTable'
 import { toast } from '@/hooks/use-toast'
 import { Calendar, DollarSign, Users, Coins, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -19,6 +18,7 @@ import {
 import { AuctionHeader } from '@/api/types'
 import { formatMoney, formatYuan } from '@/lib/number'
 import { formatDateLocal, toInputDateFormat, getTodayDateString } from '@/lib/dates'
+import { AuctionHouseAutocomplete } from './AuctionHouseAutocomplete'
 
 interface AuctionsPageProps {
   viewAuctionId?: string | null
@@ -58,7 +58,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
   }
 
   const headerColumns: Column<AuctionHeader>[] = [
-    { key: 'name', label: 'Auction Name' },
+    { key: 'auctionHouseName', label: 'Auction Name' },
     { key: 'numberOfPeople', label: 'Participants' },
     {
       key: 'date',
@@ -94,14 +94,15 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
     },
     {
       key: 'id',
-      label: 'Commission (2%)',
+      label: 'Commission',
       render: (_value, row) => {
         const auctionId = row.id
         const exchangeRate = row.exchangeRate || 7.14
+        const commissionRate = row.commissionRate || 0.02
         const totalRmb = auctionDetails
           .filter(d => d.auctionId === auctionId && d.isSold)
           .reduce((sum, d) => sum + (Number(d.highestBidRmb) || 0), 0)
-        const commission = (totalRmb * 0.02) / exchangeRate
+        const commission = (totalRmb * commissionRate) / exchangeRate
         return formatMoney(commission, 2)
       },
     },
@@ -137,12 +138,12 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
   }
 
   const handleDeleteHeader = async (header: AuctionHeader) => {
-    if (window.confirm(`Are you sure you want to delete "${header.name}"?`)) {
+    if (window.confirm(`Are you sure you want to delete "${header.auctionHouseName}"?`)) {
       try {
         await deleteHeaderMutation.mutateAsync(header.id)
         toast({
           title: 'Auction deleted',
-          description: `${header.name} has been successfully deleted.`,
+          description: `${header.auctionHouseName} has been successfully deleted.`,
         })
       } catch (error) {
         toast({
@@ -155,7 +156,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
   }
 
   const handleSaveHeader = async () => {
-    if (!headerFormData.name || !headerFormData.date) {
+    if (!headerFormData.auctionHouseId || !headerFormData.date) {
       toast({
         title: 'Validation Error',
         description: 'Name and date are required fields.',
@@ -165,7 +166,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
     }
 
     const header = {
-      name: headerFormData.name || '',
+      auctionHouseId: headerFormData.auctionHouseId || '',
       numberOfPeople: headerFormData.numberOfPeople || 0,
       date: headerFormData.date || '',
       exchangeRate: headerFormData.exchangeRate || 7.14,
@@ -180,7 +181,7 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
 
       toast({
         title: `Auction ${editingHeader ? 'updated' : 'added'}`,
-        description: `${header.name} has been successfully ${editingHeader ? 'updated' : 'added'}.`,
+        description: `Auction has been successfully ${editingHeader ? 'updated' : 'added'}.`,
       })
 
       setIsHeaderDialogOpen(false)
@@ -274,7 +275,6 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
             <div className='text-base font-semibold text-purple-600 mt-2'>
               {formatYuan(metrics.totalCommissionRmb, 0)}
             </div>
-            <p className='text-sm text-purple-700 mt-1'>2% of RMB sales</p>
           </CardContent>
         </Card>
       </div>
@@ -328,24 +328,11 @@ const AuctionsPage: React.FC<AuctionsPageProps> = ({ onNavigate }) => {
           </DialogHeader>
 
           <div className='grid gap-6 py-6'>
-            <div className='space-y-2'>
-              <Label htmlFor='auction-name' className='text-base font-medium'>
-                Auction Name *
-              </Label>
-              <Select
-                value={headerFormData.name}
-                onValueChange={value => setHeaderFormData({ ...headerFormData, name: value })}
-              >
-                <SelectTrigger id='auction-name' className='h-12 text-base'>
-                  <SelectValue placeholder='Select auction name' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='Pinguino'>Pinguino</SelectItem>
-                  <SelectItem value='Antonio'>Antonio</SelectItem>
-                  <SelectItem value='Juan'>Juan</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <AuctionHouseAutocomplete
+              value={headerFormData.auctionHouseId || null}
+              onChange={auctionHouseId => setHeaderFormData({ ...headerFormData, auctionHouseId })}
+              required
+            />
 
             <div className='grid grid-cols-2 gap-4'>
               <div className='space-y-2'>

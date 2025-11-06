@@ -25,15 +25,26 @@ export interface Product {
   createdAt: string
 }
 
-export interface AuctionHeader {
+export interface AuctionHouse {
   id: string
   name: string
+  commissionRate: number
+  isActive: boolean
+  createdAt: string
+}
+
+export interface AuctionHeader {
+  id: string
+  name?: string // Deprecated - use auctionHouseName instead
+  auctionHouseId: string
   numberOfPeople: number | null
   date: string
   exchangeRate: number | null // USD to Yuan
   isClosed: boolean
   closedAt: string | null
   createdAt: string
+  auctionHouseName?: string
+  commissionRate?: number
 }
 
 export interface AuctionDetail {

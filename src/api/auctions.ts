@@ -48,7 +48,7 @@ const createAuctionHeader = async (
   const response = await fetch(`${API_BASE_URL}/auction-headers`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(auctionHeader),
+    body: JSON.stringify({ ...auctionHeader, name: '--' }),
   })
 
   if (!response.ok) {
@@ -66,7 +66,7 @@ const updateAuctionHeader = async (
   const response = await fetch(`${API_BASE_URL}/auction-headers`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(auctionHeader),
+    body: JSON.stringify({ ...auctionHeader, name: '--' }),
   })
 
   if (!response.ok) {

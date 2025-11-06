@@ -58,8 +58,9 @@ const getNextAuctionHeaderId = async () => {
 
 const addAuctionHeaderSchema = joi.object({
   name: joi.string().min(1).max(200).required(),
+  auctionHouseId: joi.number().integer().required(),
   numberOfPeople: joi.number().integer().min(0).allow(null),
-  date: joi.date().required(),
+  date: joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
   exchangeRate: joi.number().min(0).allow(null),
 })
 const addAuctionHeader = async ({ request }) => {
@@ -75,8 +76,9 @@ const addAuctionHeader = async ({ request }) => {
 const updateAuctionHeaderSchema = joi.object({
   id: joi.number().integer().required(),
   name: joi.string().min(1).max(200).required(),
+  auctionHouseId: joi.number().integer().required(),
   numberOfPeople: joi.number().integer().min(0).allow(null),
-  date: joi.date().required(),
+  date: joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
   exchangeRate: joi.number().min(0).allow(null),
 })
 const updateAuctionHeader = async ({ request }) => {
@@ -177,12 +179,13 @@ const getAuctionMetrics = async () => {
       const priceSold = Number(row.priceSold) || 0
       const highestBidRmb = Number(row.highestBidRmb) || 0
       const exchangeRate = Number(row.exchangeRate) || 7.14
+      const commissionRate = Number(row.commissionRate) || 0.02
 
       totalRevenueUsd += priceSold
       totalRmb += highestBidRmb
 
-      // Calculate commission (2% of RMB)
-      const commissionRmb = highestBidRmb * 0.02
+      // Calculate commission based on auction house commission rate
+      const commissionRmb = highestBidRmb * commissionRate
       const commissionUsd = commissionRmb / exchangeRate
 
       totalCommissionRmb += commissionRmb

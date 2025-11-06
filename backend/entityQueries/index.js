@@ -3,6 +3,7 @@ const categoryRepo = require('./category')
 const productRepo = require('./product')
 const auctionHeaderRepo = require('./auctionHeader')
 const auctionDetailRepo = require('./auctionDetail')
+const auctionHouseRepo = require('./auctionHouse')
 
 module.exports = {
   clientRepo,
@@ -10,4 +11,5 @@ module.exports = {
   productRepo,
   auctionHeaderRepo,
   auctionDetailRepo,
+  auctionHouseRepo,
 }

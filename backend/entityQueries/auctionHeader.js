@@ -4,21 +4,25 @@ const getAuctionHeaders = fetchResultMySQL(({ page, limit, id }, connection) =>
   connection.query(
     `
     SELECT 
-      id,
-      name,
-      number_of_people,
-      date,
-      exchange_rate,
-      is_closed,
-      closed_at,
-      created_at 
+      ah.id,
+      ah.name,
+      ah.auction_house_id,
+      ah.number_of_people,
+      ah.date,
+      ah.exchange_rate,
+      ah.is_closed,
+      ah.closed_at,
+      ah.created_at,
+      ahs.name as auction_house_name,
+      ahs.commission_rate
     FROM 
-      auction_headers
+      auction_headers ah
+      LEFT JOIN auction_houses ahs ON ah.auction_house_id = ahs.id
     WHERE 
-      is_deleted = false
-      AND (id = ? OR ? IS NULL)
+      ah.is_deleted = false
+      AND (ah.id = ? OR ? IS NULL)
     ORDER BY 
-      date DESC, created_at DESC
+      ah.date DESC, ah.created_at DESC
     ${limit ? `LIMIT ? OFFSET ?` : ''}
   `,
     [id, id, limit, page]
@@ -38,33 +42,36 @@ const getNextAuctionHeaderId = fetchResultMySQL((params, connection) =>
 )
 
 const insertAuctionHeader = fetchResultMySQL(
-  ({ name, numberOfPeople, date, exchangeRate }, connection) =>
+  ({ name, auctionHouseId, numberOfPeople, date, exchangeRate }, connection) =>
     connection.query(
       `
       INSERT INTO auction_headers (
-        name, 
+        name,
+        auction_house_id, 
         number_of_people, 
         date, 
         exchange_rate
       )
       VALUES (
         ?, 
+        ?,
         ?, 
         ?, 
         ?
      )
     `,
-      [name, numberOfPeople, date, exchangeRate]
+      [name, auctionHouseId, numberOfPeople, date, exchangeRate]
     )
 )
 
 const updateAuctionHeader = fetchResultMySQL(
-  ({ id, name, numberOfPeople, date, exchangeRate }, connection) =>
+  ({ id, name, auctionHouseId, numberOfPeople, date, exchangeRate }, connection) =>
     connection.query(
       `
       UPDATE auction_headers
       SET 
         name = ?,
+        auction_house_id = ?,
         number_of_people = ?,
         date = ?,
         exchange_rate = ?,
@@ -72,7 +79,7 @@ const updateAuctionHeader = fetchResultMySQL(
       WHERE 
         id = ?
     `,
-      [name, numberOfPeople, date, exchangeRate, id]
+      [name, auctionHouseId, numberOfPeople, date, exchangeRate, id]
     )
 )
 
@@ -125,14 +132,17 @@ const getAuctionMetricsData = fetchResultMySQL((params, connection) =>
     `
     SELECT 
       ah.id,
+      ah.name,
       ah.number_of_people,
       ah.exchange_rate,
+      ahs.commission_rate,
       ad.id as detail_id,
       ad.price_sold,
       ad.highest_bid_rmb,
       ad.is_sold
     FROM 
       auction_headers ah
+      LEFT JOIN auction_houses ahs ON ah.auction_house_id = ahs.id
       LEFT JOIN auction_details ad ON ah.id = ad.auction_id AND ad.is_deleted = false
     WHERE 
       ah.is_deleted = false

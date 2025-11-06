@@ -3,6 +3,7 @@ const categoriesRoute = require('./categories')
 const productsRoute = require('./products')
 const auctionHeadersRoute = require('./auctionHeaders')
 const auctionDetailsRoute = require('./auctionDetails')
+const auctionHousesRoute = require('./auctionHouses')
 const metabaseRoute = require('./metabase')
 
 module.exports = {
@@ -11,5 +12,6 @@ module.exports = {
   productsRoute,
   auctionHeadersRoute,
   auctionDetailsRoute,
+  auctionHousesRoute,
   metabaseRoute,
 }
