@@ -20,7 +20,11 @@ const mysqlConfig = {
   database: process.env.DATABASE_NAME,
   port: process.env.DATABASE_PORT ? process.env.DATABASE_PORT : 3306,
   waitForConnections: true,
-  connectionLimit: 10,
+  // One Lambda container handles one request at a time, so a tiny pool is enough.
+  // Total DB connections = containers * connectionLimit.
+  connectionLimit: 2,
+  maxIdle: 2,
+  idleTimeout: 60000,
   queueLimit: 0,
 }
 
@@ -102,13 +106,15 @@ function fetchResultPg(query, { singleResult = false } = {}) {
   }
 }
 
+// Single pool per Lambda container, reused across invocations (never create one per query).
+let mysqlPool = null
+const getMysqlPool = () => (mysqlPool ??= mysql.createPool(mysqlConfig))
+
 function fetchResultMySQL(query, { singleResult = false } = {}) {
   return async (...args) => {
-    const pool = mysql.createPool(mysqlConfig)
-    const connection = await pool.getConnection()
+    const connection = await getMysqlPool().getConnection()
     try {
       const result = await query(...args, connection)
-      await connection.release()
 
       // Check if result is a ResultSetHeader (INSERT, UPDATE, DELETE)
       if (result[0] && result[0].constructor.name === 'ResultSetHeader') {
@@ -124,8 +130,9 @@ function fetchResultMySQL(query, { singleResult = false } = {}) {
       return singleResult ? records[0] : records
     } catch (error) {
       console.error(error)
-      await connection.release()
       throw error
+    } finally {
+      connection.release()
     }
   }
 }
